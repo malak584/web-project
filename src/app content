@@ -1,0 +1,21 @@
+<Router>
+      <div className="app-container">
+        <Routes>
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route
+            path="/"
+            element={
+              <div className="home-container">
+                <h1>Welcome</h1>
+                <p>Choose an option:</p>
+                <div className="buttons">
+                  <Link to="/signin" className="btn">Sign In</Link>
+                  <Link to="/signup" className="btn">Sign Up</Link>
+                </div>
+              </div>
+            }
+          />
+        </Routes>
+      </div>
+    </Router>
