@@ -1,29 +1,70 @@
+// Load environment variables from the .env file
+require("dotenv").config();  
+// Import the Express framework for handling HTTP requests
 const express = require("express");
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
+// Import CORS (Cross-Origin Resource Sharing) to allow frontend requests from different origins
 const cors = require("cors");
+// Import Cookie Parser to handle cookies in HTTP requests
+const cookieParser = require("cookie-parser");
+// Import Mongoose to interact with MongoDB
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const authRoutes = require("./routes/authRoutes"); 
 
 
 
-// Load environment variables
-dotenv.config();
 
+// Create an Express application
 const app = express();
 
-// Middleware
+
+/* ===========================
+    MIDDLEWARE CONFIGURATION
+   =========================== */
+
+
+// Middleware to parse incoming JSON requests (needed for POST/PUT requests)
 app.use(express.json());
-app.use(cors());
 
-// Routes
-app.use("/api/auth", authRoutes);
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log("MongoDB Connected"))
-    .catch((err) => console.log(err));
+// Enable CORS to allow frontend requests from "http://localhost:3000"
+// "credentials: true" allows sending cookies with requests
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 
+
+// Use cookie-parser middleware to handle cookies in HTTP requests
+app.use(cookieParser());
+
+
+/* ===========================
+    DATABASE CONNECTION
+   =========================== */
+   
+// Connect to MongoDB using the URI stored in the .env file
+mongoose
+  .connect(process.env.MONGO_URI)  // Retrieve MongoDB URI from the .env file
+  .then(() => console.log("MongoDB Connected"))  // Log success message if connection is successful
+  .catch((err) => console.error(err));  // Log error message if connection fails
+
+
+/* ===========================
+    ROUTES CONFIGURATION
+   =========================== */
+
+
+// Import and use authentication routes (register, login, logout)
+app.use("/api/auth", require("./routes/authRoutes"));
+//const userRoutes = require("./routes/userRoutes");
+//app.use("/api/users", userRoutes);
+
+
+/* ===========================
+    START THE SERVER
+   =========================== */
+
+
+// Define the port to listen on (default is 5000 if not specified in .env)
 const PORT = process.env.PORT || 5000;
+
+
+// Start the server and listen for incoming requests
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
