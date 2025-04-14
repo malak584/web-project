@@ -10,8 +10,9 @@ const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-
-
+const authRoutes = require('./routes/auth');
+const jobRoutes = require('./routes/jobs');
+const newsletterRoutes = require('./routes/newsletter');
 
 // Create an Express application
 const app = express();
@@ -52,9 +53,13 @@ mongoose
 
 
 // Import and use authentication routes (register, login, logout)
-app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/auth", authRoutes);
 //const userRoutes = require("./routes/userRoutes");
 //app.use("/api/users", userRoutes);
+
+// Routes
+app.use('/api/jobs', jobRoutes);
+app.use('/api/newsletter', newsletterRoutes);
 
 
 /* ===========================

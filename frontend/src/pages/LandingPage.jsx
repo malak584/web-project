@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -8,7 +8,9 @@ import {
   faMobileAlt,
   faBriefcase,
   faDollarSign,
-  faGraduationCap
+  faGraduationCap,
+  faEnvelope,
+  faPaperPlane
 } from '@fortawesome/free-solid-svg-icons';
 import { faFacebookF, faTwitter as faTwitterBrand, faLinkedinIn, faInstagram as faInstagramBrand } from '@fortawesome/free-brands-svg-icons';
 import Logo from "../components/Logo";
@@ -39,6 +41,41 @@ const jobs = [
 ];
 
 const LandingPage = () => {
+  const [email, setEmail] = useState('');
+  const [subscriptionStatus, setSubscriptionStatus] = useState('');
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    setSubscriptionStatus(''); // Clear previous status
+    
+    if (!email) {
+      setSubscriptionStatus('Please enter your email address');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSubscriptionStatus('success');
+        setEmail('');
+      } else {
+        setSubscriptionStatus(data.message || 'Failed to subscribe. Please try again.');
+      }
+    } catch (error) {
+      console.error('Subscription error:', error);
+      setSubscriptionStatus('Network error. Please check your connection and try again.');
+    }
+  };
+
   return (
     <div className="landing-page">
       {/* Navigation Bar */}
@@ -237,12 +274,33 @@ const LandingPage = () => {
 
       {/* Newsletter Section */}
       <section className="newsletter-section">
-        <h2>Subscribe to Our Newsletter</h2>
-        <p>Stay updated with our latest news and offers</p>
-        <form className="newsletter-form">
-          <input type="email" className="newsletter-input" placeholder="Enter your email" />
-          <button type="submit" className="btn btn-primary">Subscribe</button>
-        </form>
+        <div className="container">
+          <h2 className="section-title">Stay Updated</h2>
+          <p className="text-center mb-4">Subscribe to our newsletter for the latest updates and job opportunities</p>
+          <form onSubmit={handleSubscribe} className="newsletter-form">
+            <div className="input-group">
+              <FontAwesomeIcon icon={faEnvelope} className="input-icon" />
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="newsletter-input"
+                required
+              />
+            </div>
+            <button type="submit" className="btn btn-primary">
+              <FontAwesomeIcon icon={faPaperPlane} className="me-2" />
+              Subscribe
+            </button>
+          </form>
+          {subscriptionStatus === 'success' && (
+            <p className="text-success mt-3">Thank you for subscribing!</p>
+          )}
+          {subscriptionStatus && subscriptionStatus !== 'success' && (
+            <p className="text-danger mt-3">{subscriptionStatus}</p>
+          )}
+        </div>
       </section>
 
       {/* Contact Section */}
