@@ -1,0 +1,25 @@
+/* src/styles/Login.css */
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    background-color: #f0f2f5;
+  }
+  
+  .login-container h2 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  
+  .login-container .btn {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    width: 200px;
+  }
+  
