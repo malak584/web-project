@@ -56,7 +56,8 @@ mongoose
 app.use("/api/auth", authRoutes);
 //const userRoutes = require("./routes/userRoutes");
 //app.use("/api/users", userRoutes);
-
+const LeaveRoutes = require("./routes/LeaveRoute");
+app.use("/api/leave", LeaveRoutes);
 // Routes
 app.use('/api/jobs', jobRoutes);
 app.use('/api/newsletter', newsletterRoutes);
