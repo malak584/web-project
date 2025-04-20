@@ -53,12 +53,13 @@ const MyLeaveRequests = () => {
     const fetchRequests = async () => {
       try {
         setLoading(true);
-        const employeeId = localStorage.getItem("userId");
+        let employeeId = localStorage.getItem("userId");
         
         if (!employeeId) {
-          setError("User not logged in");
-          setLoading(false);
-          return;
+          // Set mock user ID as fallback for demo
+          employeeId = '64f71c1a9358d5c15a535312'; // Example MongoDB id
+          localStorage.setItem("userId", employeeId);
+          console.warn("User ID not found, using mock ID for demo");
         }
         
         const response = await axios.get(`http://localhost:5000/api/leave/${employeeId}`);

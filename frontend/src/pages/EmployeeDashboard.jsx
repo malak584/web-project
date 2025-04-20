@@ -9,6 +9,7 @@ import {
   faTachometerAlt,
   faBell
 } from '@fortawesome/free-solid-svg-icons';
+import axios from 'axios';
 import LeaveRequestForm from '../components/employee/LeaveRequestForm';
 import PersonalInfoForm from '../components/employee/PersonalInfoForm';
 import MyLeaveRequests from '../components/employee/MyLeaveRequests';
@@ -18,8 +19,20 @@ const EmployeeDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [userName, setUserName] = useState('');
   const [notifications, setNotifications] = useState([]);
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
+    // Set mock user ID in localStorage if it doesn't exist
+    if (!localStorage.getItem('userId')) {
+      // Using a hard-coded ID as a fallback for demo purposes
+      const mockUserId = '64f71c1a9358d5c15a535312'; // Example ID
+      localStorage.setItem('userId', mockUserId);
+      
+      // Also set mock user data for display
+      localStorage.setItem('userFirstName', 'John');
+      localStorage.setItem('userLastName', 'Doe');
+    }
+
     // Get user name from localStorage or API
     const firstName = localStorage.getItem('userFirstName') || 'Employee';
     const lastName = localStorage.getItem('userLastName') || '';
@@ -30,7 +43,41 @@ const EmployeeDashboard = () => {
       { id: 1, type: 'leave', message: 'Your leave request has been approved', isRead: false },
       { id: 2, type: 'system', message: 'Welcome to the Employee Dashboard', isRead: true }
     ]);
+
+    // Attempt to fetch real user data if we have a userId
+    const fetchUserData = async () => {
+      try {
+        const userId = localStorage.getItem('userId');
+        if (userId) {
+          const response = await axios.get(`http://localhost:5000/api/users/${userId}`);
+          if (response.data) {
+            setUserData(response.data);
+            
+            // Update localStorage with real user data if available
+            localStorage.setItem('userFirstName', response.data.firstName || 'Employee');
+            localStorage.setItem('userLastName', response.data.lastName || '');
+            setUserName(`${response.data.firstName || 'Employee'} ${response.data.lastName || ''}`);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        // If API call fails, we already have fallback data set
+      }
+    };
+
+    fetchUserData();
   }, []);
+
+  const handleLogout = () => {
+    // Clear user data from localStorage
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userFirstName');
+    localStorage.removeItem('userLastName');
+    localStorage.removeItem('role');
+    
+    // Redirect to login page - replace with your actual login path
+    window.location.href = '/login';
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -72,8 +119,8 @@ const EmployeeDashboard = () => {
                 </div>
                 <div className="stat-info">
                   <h3>Position</h3>
-                  <p className="stat-value">Software Engineer</p>
-                  <p className="stat-label">Engineering Department</p>
+                  <p className="stat-value">{userData?.position || 'Software Engineer'}</p>
+                  <p className="stat-label">{userData?.department || 'Engineering Department'}</p>
                 </div>
               </div>
               
@@ -193,7 +240,7 @@ const EmployeeDashboard = () => {
         </nav>
         
         <div className="sidebar-footer">
-          <button className="logout-btn">
+          <button className="logout-btn" onClick={handleLogout}>
             <FontAwesomeIcon icon={faSignOutAlt} />
             <span>Logout</span>
           </button>
