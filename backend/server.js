@@ -54,8 +54,8 @@ mongoose
 
 // Import and use authentication routes (register, login, logout)
 app.use("/api/auth", authRoutes);
-//const userRoutes = require("./routes/userRoutes");
-//app.use("/api/users", userRoutes);
+const userRoutes = require("./routes/userRoutes");
+app.use("/api/users", userRoutes);
 const LeaveRoutes = require("./routes/LeaveRoute");
 app.use("/api/leave", LeaveRoutes);
 // Routes
