@@ -10,8 +10,8 @@ const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-const authRoutes = require('./routes/auth');
-const jobRoutes = require('./routes/jobs');
+const authRoutes = require('./routes/authRoutes');
+// const jobRoutes = require('./routes/jobs'); // Commented out as file does not exist
 const newsletterRoutes = require('./routes/newsletter');
 
 // Create an Express application
@@ -59,7 +59,7 @@ app.use("/api/users", userRoutes);
 const LeaveRoutes = require("./routes/LeaveRoute");
 app.use("/api/leave", LeaveRoutes);
 // Routes
-app.use('/api/jobs', jobRoutes);
+// app.use('/api/jobs', jobRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faUserCircle, 
@@ -20,6 +20,56 @@ const EmployeeDashboard = () => {
   const [userName, setUserName] = useState('');
   const [notifications, setNotifications] = useState([]);
   const [userData, setUserData] = useState(null);
+  const [leaveBalance, setLeaveBalance] = useState({
+    annual: 15,
+    sick: 10,
+    personal: 5,
+    bereavement: 3,
+    unpaid: 0
+  });
+  const [loadingBalance, setLoadingBalance] = useState(true);
+
+  // Use callback to allow function to be reused
+  const fetchLeaveBalance = useCallback(async (userId) => {
+    try {
+      setLoadingBalance(true);
+      console.log(`Fetching leave balance for user: ${userId}`);
+      const response = await axios.get(`http://localhost:5000/api/leave/balance/${userId}`);
+      if (response.data) {
+        setLeaveBalance(response.data);
+        console.log('Leave balance loaded:', response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching leave balance:', error);
+      // Keep default values
+    } finally {
+      setLoadingBalance(false);
+    }
+  }, []);
+
+  // Add a function to refresh user data and leave balance
+  const refreshUserData = useCallback(async () => {
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+      try {
+        console.log('Refreshing user data and leave balance...');
+        const response = await axios.get(`http://localhost:5000/api/users/${userId}`);
+        if (response.data) {
+          setUserData(response.data);
+          
+          // Update localStorage with real user data if available
+          localStorage.setItem('userFirstName', response.data.firstName || 'Employee');
+          localStorage.setItem('userLastName', response.data.lastName || '');
+          setUserName(`${response.data.firstName || 'Employee'} ${response.data.lastName || ''}`);
+        }
+        
+        // Always fetch the latest balance
+        await fetchLeaveBalance(userId);
+      } catch (error) {
+        console.error('Error refreshing user data:', error);
+      }
+    }
+  }, [fetchLeaveBalance]);
 
   useEffect(() => {
     // Set mock user ID in localStorage if it doesn't exist
@@ -44,29 +94,26 @@ const EmployeeDashboard = () => {
       { id: 2, type: 'system', message: 'Welcome to the Employee Dashboard', isRead: true }
     ]);
 
-    // Attempt to fetch real user data if we have a userId
-    const fetchUserData = async () => {
-      try {
-        const userId = localStorage.getItem('userId');
-        if (userId) {
-          const response = await axios.get(`http://localhost:5000/api/users/${userId}`);
-          if (response.data) {
-            setUserData(response.data);
-            
-            // Update localStorage with real user data if available
-            localStorage.setItem('userFirstName', response.data.firstName || 'Employee');
-            localStorage.setItem('userLastName', response.data.lastName || '');
-            setUserName(`${response.data.firstName || 'Employee'} ${response.data.lastName || ''}`);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        // If API call fails, we already have fallback data set
-      }
+    // Load initial data
+    refreshUserData();
+    
+    // Set up a periodic refresh every 30 seconds
+    const refreshInterval = setInterval(() => {
+      refreshUserData();
+    }, 30000);
+    
+    // Clean up on unmount
+    return () => {
+      clearInterval(refreshInterval);
     };
+  }, [refreshUserData]);
 
-    fetchUserData();
-  }, []);
+  // Listen for tab changes to refresh data when returning to overview
+  useEffect(() => {
+    if (activeTab === 'overview') {
+      refreshUserData();
+    }
+  }, [activeTab, refreshUserData]);
 
   const handleLogout = () => {
     // Clear user data from localStorage
@@ -82,9 +129,9 @@ const EmployeeDashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'leave-request':
-        return <LeaveRequestForm />;
+        return <LeaveRequestForm onSubmitSuccess={refreshUserData} />;
       case 'my-leaves':
-        return <MyLeaveRequests />;
+        return <MyLeaveRequests onStatusChange={refreshUserData} />;
       case 'personal-info':
         return <PersonalInfoForm />;
       case 'overview':
@@ -107,9 +154,9 @@ const EmployeeDashboard = () => {
                   <FontAwesomeIcon icon={faCalendarAlt} />
                 </div>
                 <div className="stat-info">
-                  <h3>Leave Balance</h3>
-                  <p className="stat-value">15 days</p>
-                  <p className="stat-label">Annual Leave</p>
+                  <h3>Annual Leave</h3>
+                  <p className="stat-value">{loadingBalance ? 'Loading...' : leaveBalance.annual} days</p>
+                  <p className="stat-label">Available Balance</p>
                 </div>
               </div>
               
@@ -132,6 +179,36 @@ const EmployeeDashboard = () => {
                   <h3>Notifications</h3>
                   <p className="stat-value">{notifications.filter(n => !n.isRead).length} new</p>
                   <p className="stat-label">{notifications.length} total</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="leave-balance-section">
+              <h3>Leave Balances</h3>
+              
+              <div className="balance-cards">
+                <div className="balance-card annual">
+                  <h4>Annual Leave</h4>
+                  <p className="balance-days">{loadingBalance ? '...' : leaveBalance.annual}</p>
+                  <p className="balance-label">days available</p>
+                </div>
+                
+                <div className="balance-card sick">
+                  <h4>Sick Leave</h4>
+                  <p className="balance-days">{loadingBalance ? '...' : leaveBalance.sick}</p>
+                  <p className="balance-label">days available</p>
+                </div>
+                
+                <div className="balance-card personal">
+                  <h4>Personal Leave</h4>
+                  <p className="balance-days">{loadingBalance ? '...' : leaveBalance.personal}</p>
+                  <p className="balance-label">days available</p>
+                </div>
+                
+                <div className="balance-card bereavement">
+                  <h4>Bereavement</h4>
+                  <p className="balance-days">{loadingBalance ? '...' : leaveBalance.bereavement}</p>
+                  <p className="balance-label">days available</p>
                 </div>
               </div>
             </div>
