@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -43,38 +43,72 @@ const calculateDuration = (startDate, endDate) => {
   return diffDays;
 };
 
-const MyLeaveRequests = () => {
+const MyLeaveRequests = ({ onStatusChange }) => {
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
 
-  useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        setLoading(true);
-        let employeeId = localStorage.getItem("userId");
-        
-        if (!employeeId) {
-          // Set mock user ID as fallback for demo
-          employeeId = '64f71c1a9358d5c15a535312'; // Example MongoDB id
-          localStorage.setItem("userId", employeeId);
-          console.warn("User ID not found, using mock ID for demo");
-        }
-        
-        const response = await axios.get(`http://localhost:5000/api/leave/${employeeId}`);
+  const fetchRequests = useCallback(async () => {
+    try {
+      setLoading(true);
+      let employeeId = localStorage.getItem("userId");
+      
+      if (!employeeId || employeeId.length !== 24) {
+        // Using a valid format MongoDB ObjectId for demo purposes
+        employeeId = '507f1f77bcf86cd799439011';
+        localStorage.setItem("userId", employeeId);
+        console.warn("User ID not found or invalid, using mock ID for demo");
+      }
+      
+      const response = await axios.get(`http://localhost:5000/api/leave/${employeeId}`);
+      
+      if (response.data) {
         setLeaveRequests(response.data);
         setError(null);
-      } catch (error) {
-        console.error("Error fetching leave requests:", error);
-        setError("Failed to load leave requests");
-      } finally {
-        setLoading(false);
+        
+        // If the status of any request has changed, trigger the callback
+        if (onStatusChange && typeof onStatusChange === 'function') {
+          const hasApprovedOrRejected = response.data.some(request => 
+            request.status === 'approved' || request.status === 'rejected'
+          );
+          
+          if (hasApprovedOrRejected) {
+            console.log("Leave requests status changed, refreshing balances");
+            onStatusChange();
+          }
+        }
       }
-    };
+    } catch (error) {
+      console.error("Error fetching leave requests:", error);
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        setError(`Server error: ${error.response.data.message || 'Failed to load leave requests'}`);
+      } else if (error.request) {
+        // The request was made but no response was received
+        setError("No response from server. Please check your connection and try again.");
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        setError(`Error: ${error.message}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [onStatusChange]);
 
+  useEffect(() => {
     fetchRequests();
-  }, []);
+    
+    // Set up periodic refresh every 15 seconds to check for status changes
+    const refreshInterval = setInterval(() => {
+      fetchRequests();
+    }, 15000);
+    
+    return () => {
+      clearInterval(refreshInterval);
+    };
+  }, [fetchRequests]);
 
   const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);

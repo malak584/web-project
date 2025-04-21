@@ -61,6 +61,28 @@ const UserSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true
+    },
+    leaveBalance: {
+        annual: {
+            type: Number,
+            default: 15
+        },
+        sick: {
+            type: Number,
+            default: 10
+        },
+        personal: {
+            type: Number,
+            default: 5
+        },
+        bereavement: {
+            type: Number,
+            default: 3
+        },
+        unpaid: {
+            type: Number,
+            default: 0 // Unlimited, but we'll track it
+        }
     }
 }, { timestamps: true });
 

@@ -359,6 +359,79 @@
   font-size: 0.9rem;
 }
 
+/* Leave Balance Section */
+.leave-balance-section {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.leave-balance-section h3 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  color: #3a4a5b;
+  font-weight: 600;
+}
+
+.balance-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.balance-card {
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.balance-card:hover {
+  transform: translateY(-3px);
+}
+
+.balance-card h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.balance-days {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+.balance-label {
+  font-size: 0.8rem;
+  margin: 0;
+  opacity: 0.7;
+}
+
+.balance-card.annual {
+  background-color: #e6f7ff;
+  color: #0075bf;
+}
+
+.balance-card.sick {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.balance-card.personal {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.balance-card.bereavement {
+  background-color: #ede7f6;
+  color: #512da8;
+}
+
 @media (max-width: 768px) {
   .dashboard-sidebar {
     width: 80px;

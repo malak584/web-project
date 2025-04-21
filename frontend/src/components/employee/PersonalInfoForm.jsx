@@ -34,17 +34,43 @@ const PersonalInfoForm = () => {
         setLoading(true);
         let userId = localStorage.getItem('userId');
         
-        if (!userId) {
-          // Set mock user ID as fallback for demo
-          userId = '64f71c1a9358d5c15a535312'; // Example MongoDB id
+        if (!userId || userId.length !== 24) {
+          // Using a valid format MongoDB ObjectId for demo purposes
+          userId = '507f1f77bcf86cd799439011';
           localStorage.setItem('userId', userId);
-          console.warn("User ID not found, using mock ID for demo");
+          console.warn("User ID not found or invalid, using mock ID for demo");
         }
         
         const response = await axios.get(`http://localhost:5000/api/users/${userId}`);
-        setUserData(response.data || {});
+        
+        if (response.data) {
+          setUserData(response.data || {});
+        } else {
+          // If no data is returned, set some default values
+          setUserData({
+            firstName: 'Demo',
+            lastName: 'User',
+            email: 'demo@example.com',
+            phone: '',
+            address: '',
+            emergencyContact: '',
+            emergencyPhone: ''
+          });
+        }
       } catch (error) {
         console.error('Error fetching user data:', error);
+        // Set default user data as fallback
+        setUserData({
+          firstName: 'Demo',
+          lastName: 'User',
+          email: 'demo@example.com',
+          phone: '',
+          address: '',
+          emergencyContact: '',
+          emergencyPhone: ''
+        });
+        
+        setErrors({ general: 'Failed to load user data. Using demo data instead.' });
       } finally {
         setLoading(false);
       }
@@ -114,22 +140,39 @@ const PersonalInfoForm = () => {
       setSaving(true);
       let userId = localStorage.getItem('userId');
       
-      if (!userId) {
-        // Set mock user ID as fallback for demo
-        userId = '64f71c1a9358d5c15a535312'; // Example MongoDB id
+      if (!userId || userId.length !== 24) {
+        // Using a valid format MongoDB ObjectId for demo purposes
+        userId = '507f1f77bcf86cd799439011';
         localStorage.setItem('userId', userId);
-        console.warn("User ID not found, using mock ID for demo");
+        console.warn("User ID not found or invalid, using mock ID for demo");
       }
       
-      await axios.put(`http://localhost:5000/api/users/${userId}`, userData);
+      const response = await axios.put(`http://localhost:5000/api/users/${userId}`, userData);
       
-      setSuccessMessage('Personal information updated successfully!');
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 5000);
+      if (response.data) {
+        setSuccessMessage('Personal information updated successfully!');
+        
+        // Update localStorage with new user data for better UI consistency
+        if (userData.firstName) localStorage.setItem('userFirstName', userData.firstName);
+        if (userData.lastName) localStorage.setItem('userLastName', userData.lastName);
+        
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 5000);
+      }
     } catch (error) {
       console.error('Error updating user data:', error);
-      setErrors({ general: 'Failed to update personal information. Please try again.' });
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        setErrors({ general: `Server error: ${error.response.data.message || 'Failed to update information'}` });
+      } else if (error.request) {
+        // The request was made but no response was received
+        setErrors({ general: "No response from server. Please check your connection and try again." });
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        setErrors({ general: `Error: ${error.message}` });
+      }
     } finally {
       setSaving(false);
     }
