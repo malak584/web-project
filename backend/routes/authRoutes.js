@@ -56,9 +56,23 @@ router.post("/login", async (req, res) => {
     // Generate JWT Token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
+    // Create user object without password for the response
+    const userResponse = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      position: user.position,
+      department: user.department
+    };
 
     res.cookie("token", token, { httpOnly: true });
-    res.status(200).json({ message: "Login successful", token, role: user.role });
+    res.status(200).json({ 
+      message: "Login successful", 
+      token, 
+      role: user.role,
+      userId: user._id,
+      user: userResponse
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

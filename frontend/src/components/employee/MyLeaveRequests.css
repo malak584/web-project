@@ -205,4 +205,113 @@
   font-style: italic;
   color: #78909c;
   margin-top: 0.5rem;
+}
+
+.leave-balance-summary {
+  background-color: #f5f7fa;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e0e6ed;
+}
+
+.leave-balance-summary h3 {
+  font-size: 1rem;
+  color: #455a64;
+  margin: 0 0 0.75rem 0;
+}
+
+.balance-summary-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.balance-summary-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.balance-type {
+  font-size: 0.85rem;
+  color: #546e7a;
+  margin-bottom: 0.25rem;
+}
+
+.balance-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #37474f;
+}
+
+.pending-days {
+  font-size: 0.8rem;
+  color: #f57c00;
+  margin-top: 0.25rem;
+}
+
+.requests-heading {
+  font-size: 1.1rem;
+  color: #455a64;
+  margin: 0 0 1rem 0;
+  border-bottom: 1px solid #e0e6ed;
+  padding-bottom: 0.5rem;
+}
+
+.balance-impact-info {
+  margin-bottom: 1rem;
+  background-color: #f0f7ff;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid #1976d2;
+}
+
+.balance-impact-info h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  color: #1976d2;
+}
+
+.balance-impact-info p {
+  margin: 0;
+  color: #37474f;
+  font-size: 0.9rem;
+}
+
+.recent-update-badge {
+  background-color: #e53e3e;
+  color: white;
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 10px;
+  margin-left: 0.5rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(229, 62, 62, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(229, 62, 62, 0); }
+}
+
+.manager-comment.recent {
+  position: relative;
+  animation: highlightComment 1.5s ease-in-out;
+  border: 1px solid #c8e6c9;
+}
+
+@keyframes highlightComment {
+  0% { background-color: #c8e6c9; }
+  100% { background-color: #f1f8e9; }
+}
+
+.request-item.expanded .request-details {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 } 
