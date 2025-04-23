@@ -15,37 +15,48 @@ const Login = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const user = users.find(
-      (u) => u.email === form.email && u.password === form.password
-    );
-
-    if (user) {
-      // Store user data and role
-      localStorage.setItem("currentUser", JSON.stringify(user));
-      localStorage.setItem("role", user.role);
-      
-      // Navigate based on role
-      switch(user.role) {
-        case 'manager':
+  
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // important if you're using cookies
+        body: JSON.stringify(form),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        alert(data.message || "Login failed");
+        return;
+      }
+  
+      // Optionally store token or user info if returned
+      localStorage.setItem("role", data.role); // you need to send role from backend
+      // navigate by role
+      switch (data.role) {
+        case "manager":
           navigate("/manager");
           break;
-        case 'hr':
+        case "hr":
           navigate("/hr");
           break;
-        case 'employee':
+        case "employee":
           navigate("/employee");
           break;
         default:
           navigate("/");
       }
-    } else {
-      alert("Invalid email or password");
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Something went wrong. Please try again.");
     }
   };
+  
 
   return (
     <div className="login-page">
