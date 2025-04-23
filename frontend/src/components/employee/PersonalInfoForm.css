@@ -155,4 +155,52 @@ label svg {
   align-items: center;
   padding: 2rem;
   color: #455a64;
+}
+
+/* Phone input styles */
+.phone-input-container {
+  display: flex;
+  align-items: stretch;
+  position: relative;
+}
+
+.phone-prefix {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #edf2ff;
+  color: #5c6bc0;
+  padding: 0 12px;
+  border: 1px solid #ddd;
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  user-select: none;
+}
+
+.phone-input {
+  border-radius: 0 4px 4px 0;
+  flex: 1;
+}
+
+.phone-input-container:focus-within .phone-prefix {
+  border-color: #5c6bc0;
+  background-color: #e3ecff;
+}
+
+.phone-input-container .input.input-error {
+  border-radius: 0 4px 4px 0;
+}
+
+.phone-input-container .input.input-error ~ .phone-prefix {
+  border-color: #e53935;
+  background-color: #fff8f8;
+}
+
+.info-text {
+  color: #5c6bc0;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: block;
 } 

@@ -1,0 +1,249 @@
+.leave-approval-container {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.leave-approval-container .card-header {
+  background: linear-gradient(135deg, #3949ab 0%, #283593 100%);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.leave-approval-container .header-icon {
+  font-size: 1.5rem;
+  margin-right: 1rem;
+}
+
+.leave-approval-container h2 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: white;
+}
+
+.card-content {
+  padding: 1.5rem;
+}
+
+.empty-state {
+  padding: 2rem;
+  text-align: center;
+  color: #78909c;
+}
+
+.requests-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.request-item {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  background-color: #fff;
+  transition: all 0.2s ease;
+}
+
+.request-item.expanded {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+}
+
+.request-info {
+  padding: 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.request-employee {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #37474f;
+}
+
+.request-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-icon {
+  font-size: 1rem;
+}
+
+.status-icon.pending {
+  color: #f57c00;
+}
+
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.pending {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.request-type {
+  font-weight: 500;
+  color: #455a64;
+  font-size: 0.9rem;
+}
+
+.request-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  color: #546e7a;
+  font-size: 0.875rem;
+}
+
+.date-label {
+  font-weight: 500;
+  margin-right: 0.25rem;
+}
+
+.duration {
+  font-weight: 500;
+  color: #455a64;
+}
+
+.request-details {
+  padding: 1rem;
+  background-color: #fafafa;
+}
+
+.request-reason {
+  margin-bottom: 1rem;
+}
+
+.request-reason h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  color: #546e7a;
+}
+
+.request-reason p {
+  margin: 0;
+  padding: 0.75rem;
+  background-color: #fff;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+  color: #37474f;
+}
+
+.manager-comment-input {
+  margin-bottom: 1rem;
+}
+
+.manager-comment-input h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  color: #546e7a;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.comment-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  resize: vertical;
+  min-height: 60px;
+  transition: border-color 0.2s;
+}
+
+.comment-textarea:focus {
+  outline: none;
+  border-color: #3949ab;
+}
+
+.request-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.request-actions button {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.approve-button {
+  background-color: #2e7d32;
+  color: white;
+}
+
+.approve-button:hover {
+  background-color: #28692a;
+}
+
+.reject-button {
+  background-color: #c62828;
+  color: white;
+}
+
+.reject-button:hover {
+  background-color: #b22323;
+}
+
+.request-actions button:disabled {
+  background-color: #b0bec5;
+  cursor: not-allowed;
+}
+
+.request-meta {
+  font-size: 0.75rem;
+  color: #78909c;
+  text-align: right;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  color: #455a64;
+} 
+
+.error-message {
+  color: #d32f2f;
+  background-color: #ffebee;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+  font-weight: 500;
+} 

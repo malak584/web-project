@@ -48,6 +48,22 @@ const MyLeaveRequests = ({ onStatusChange }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const [leaveBalance, setLeaveBalance] = useState(null);
+  const [loadingBalance, setLoadingBalance] = useState(false);
+
+  const fetchLeaveBalance = useCallback(async (userId) => {
+    try {
+      setLoadingBalance(true);
+      const response = await axios.get(`http://localhost:5000/api/leave/balance/${userId}`);
+      if (response.data) {
+        setLeaveBalance(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching leave balance:", error);
+    } finally {
+      setLoadingBalance(false);
+    }
+  }, []);
 
   const fetchRequests = useCallback(async () => {
     try {
@@ -76,6 +92,8 @@ const MyLeaveRequests = ({ onStatusChange }) => {
           if (hasApprovedOrRejected) {
             console.log("Leave requests status changed, refreshing balances");
             onStatusChange();
+            // Also refresh balance within this component
+            fetchLeaveBalance(employeeId);
           }
         }
       }
@@ -95,9 +113,13 @@ const MyLeaveRequests = ({ onStatusChange }) => {
     } finally {
       setLoading(false);
     }
-  }, [onStatusChange]);
+  }, [onStatusChange, fetchLeaveBalance]);
 
   useEffect(() => {
+    const employeeId = localStorage.getItem("userId");
+    if (employeeId) {
+      fetchLeaveBalance(employeeId);
+    }
     fetchRequests();
     
     // Set up periodic refresh every 15 seconds to check for status changes
@@ -108,10 +130,34 @@ const MyLeaveRequests = ({ onStatusChange }) => {
     return () => {
       clearInterval(refreshInterval);
     };
-  }, [fetchRequests]);
+  }, [fetchRequests, fetchLeaveBalance]);
+
+  // Calculate pending leave days by type
+  const getPendingDaysByType = () => {
+    const pending = {};
+    
+    leaveRequests
+      .filter(request => request.status === 'pending')
+      .forEach(request => {
+        const days = calculateDuration(request.startDate, request.endDate);
+        pending[request.leaveType] = (pending[request.leaveType] || 0) + days;
+      });
+    
+    return pending;
+  };
 
   const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
+  };
+
+  // Add function to check if request was recently approved/rejected
+  const isRecentlyUpdated = (approvedAt) => {
+    if (!approvedAt) return false;
+    
+    const approvedDate = new Date(approvedAt);
+    const now = new Date();
+    // Consider it recent if it was approved/rejected within the last 24 hours
+    return (now - approvedDate) < 24 * 60 * 60 * 1000;
   };
 
   if (loading) {
@@ -127,6 +173,8 @@ const MyLeaveRequests = ({ onStatusChange }) => {
     return <div className="error-message">{error}</div>;
   }
 
+  const pendingDaysByType = getPendingDaysByType();
+
   return (
     <div className="leave-requests-container">
       <div className="card-header">
@@ -135,6 +183,52 @@ const MyLeaveRequests = ({ onStatusChange }) => {
       </div>
       
       <div className="card-content">
+        {leaveBalance && (
+          <div className="leave-balance-summary">
+            <h3>Available Leave</h3>
+            <div className="balance-summary-items">
+              <div className="balance-summary-item">
+                <span className="balance-type">Annual</span>
+                <span className="balance-value">{leaveBalance.annual} days</span>
+                {pendingDaysByType.annual > 0 && (
+                  <span className="pending-days">
+                    ({pendingDaysByType.annual} pending)
+                  </span>
+                )}
+              </div>
+              <div className="balance-summary-item">
+                <span className="balance-type">Sick</span>
+                <span className="balance-value">{leaveBalance.sick} days</span>
+                {pendingDaysByType.sick > 0 && (
+                  <span className="pending-days">
+                    ({pendingDaysByType.sick} pending)
+                  </span>
+                )}
+              </div>
+              <div className="balance-summary-item">
+                <span className="balance-type">Personal</span>
+                <span className="balance-value">{leaveBalance.personal} days</span>
+                {pendingDaysByType.personal > 0 && (
+                  <span className="pending-days">
+                    ({pendingDaysByType.personal} pending)
+                  </span>
+                )}
+              </div>
+              <div className="balance-summary-item">
+                <span className="balance-type">Bereavement</span>
+                <span className="balance-value">{leaveBalance.bereavement} days</span>
+                {pendingDaysByType.bereavement > 0 && (
+                  <span className="pending-days">
+                    ({pendingDaysByType.bereavement} pending)
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <h3 className="requests-heading">Your Requests</h3>
+        
         {leaveRequests.length === 0 ? (
           <div className="empty-state">
             <p>You don't have any leave requests yet.</p>
@@ -158,6 +252,9 @@ const MyLeaveRequests = ({ onStatusChange }) => {
                       <span className={`status-badge ${request.status}`}>
                         {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                       </span>
+                      {isRecentlyUpdated(request.approvedAt) && (
+                        <span className="recent-update-badge">New</span>
+                      )}
                     </div>
                     <div className="request-type">
                       {LeaveTypeLabels[request.leaveType] || request.leaveType}
@@ -183,8 +280,15 @@ const MyLeaveRequests = ({ onStatusChange }) => {
                         <p>{request.reason}</p>
                       </div>
                       
+                      {request.status === 'approved' && request.leaveType !== 'unpaid' && leaveBalance && (
+                        <div className="balance-impact-info">
+                          <h4>Leave Balance Impact:</h4>
+                          <p>This request reduced your {LeaveTypeLabels[request.leaveType].toLowerCase()} by {duration} {duration === 1 ? 'day' : 'days'}.</p>
+                        </div>
+                      )}
+                      
                       {request.managerComment && (
-                        <div className="manager-comment">
+                        <div className={`manager-comment ${isRecentlyUpdated(request.approvedAt) ? 'recent' : ''}`}>
                           <h4>
                             <FontAwesomeIcon icon={faComment} /> Manager Comments:
                           </h4>

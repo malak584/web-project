@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faUserCircle, 
@@ -7,7 +7,9 @@ import {
   faUserEdit,
   faSignOutAlt,
   faTachometerAlt,
-  faBell
+  faBell,
+  faCheckCircle,
+  faTimesCircle
 } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import LeaveRequestForm from '../components/employee/LeaveRequestForm';
@@ -28,6 +30,10 @@ const EmployeeDashboard = () => {
     unpaid: 0
   });
   const [loadingBalance, setLoadingBalance] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [showNotificationPopup, setShowNotificationPopup] = useState(false);
+  const notificationPopupRef = useRef(null);
+  const [isNameUpdated, setIsNameUpdated] = useState(false);
 
   // Use callback to allow function to be reused
   const fetchLeaveBalance = useCallback(async (userId) => {
@@ -37,6 +43,7 @@ const EmployeeDashboard = () => {
       const response = await axios.get(`http://localhost:5000/api/leave/balance/${userId}`);
       if (response.data) {
         setLeaveBalance(response.data);
+        setLastUpdated(new Date());
         console.log('Leave balance loaded:', response.data);
       }
     } catch (error) {
@@ -47,84 +54,304 @@ const EmployeeDashboard = () => {
     }
   }, []);
 
-  // Add a function to refresh user data and leave balance
-  const refreshUserData = useCallback(async () => {
-    const userId = localStorage.getItem('userId');
-    if (userId) {
+  // Update the useEffect for initial data loading to load notifications from localStorage
+  useEffect(() => {
+    const getUserData = async () => {
       try {
-        console.log('Refreshing user data and leave balance...');
+        // Get stored userName from localStorage first
+        let storedUserName = localStorage.getItem('userName');
+        
+        // If userName exists in localStorage, use it
+        if (storedUserName) {
+          setUserName(storedUserName);
+        } else {
+          // Fallback to first and last name if available
+          const firstName = localStorage.getItem('firstName');
+          const lastName = localStorage.getItem('lastName');
+          if (firstName && lastName) {
+            const fullName = `${firstName} ${lastName}`;
+            setUserName(fullName);
+          } else {
+            // Default name if no name is found
+            setUserName('Employee');
+          }
+        }
+        
+        // Get user ID from localStorage
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+          console.warn('User ID not found in localStorage');
+          return;
+        }
+        
+        // Fetch user data from API if needed for additional details
         const response = await axios.get(`http://localhost:5000/api/users/${userId}`);
+        
         if (response.data) {
           setUserData(response.data);
           
-          // Update localStorage with real user data if available
-          localStorage.setItem('userFirstName', response.data.firstName || 'Employee');
-          localStorage.setItem('userLastName', response.data.lastName || '');
-          setUserName(`${response.data.firstName || 'Employee'} ${response.data.lastName || ''}`);
+          // Update name if not already set from localStorage
+          if (!storedUserName) {
+            const fullName = `${response.data.firstName} ${response.data.lastName}`;
+            setUserName(fullName);
+            localStorage.setItem('userName', fullName);
+          }
         }
         
-        // Always fetch the latest balance
-        await fetchLeaveBalance(userId);
+        // Fetch leave balance
+        fetchLeaveBalance(userId);
+        
+        // Load notifications from localStorage
+        const storedNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+        setNotifications(storedNotifications);
       } catch (error) {
-        console.error('Error refreshing user data:', error);
+        console.error('Error fetching user data:', error);
+        
+        // Fallback to localStorage data if API fails
+        const firstName = localStorage.getItem('firstName') || '';
+        const lastName = localStorage.getItem('lastName') || '';
+        if (firstName || lastName) {
+          setUserName(`${firstName} ${lastName}`.trim() || 'Employee');
+        }
+        
+        // Still load notifications even if user data fails
+        const storedNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+        setNotifications(storedNotifications);
       }
-    }
+    };
+    
+    getUserData();
   }, [fetchLeaveBalance]);
 
+  // Set up periodic polling to refresh leave balances
   useEffect(() => {
-    // Set mock user ID in localStorage if it doesn't exist
-    if (!localStorage.getItem('userId')) {
-      // Using a hard-coded ID as a fallback for demo purposes
-      const mockUserId = '64f71c1a9358d5c15a535312'; // Example ID
-      localStorage.setItem('userId', mockUserId);
-      
-      // Also set mock user data for display
-      localStorage.setItem('userFirstName', 'John');
-      localStorage.setItem('userLastName', 'Doe');
-    }
-
-    // Get user name from localStorage or API
-    const firstName = localStorage.getItem('userFirstName') || 'Employee';
-    const lastName = localStorage.getItem('userLastName') || '';
-    setUserName(`${firstName} ${lastName}`);
-
-    // Mock notifications
-    setNotifications([
-      { id: 1, type: 'leave', message: 'Your leave request has been approved', isRead: false },
-      { id: 2, type: 'system', message: 'Welcome to the Employee Dashboard', isRead: true }
-    ]);
-
-    // Load initial data
-    refreshUserData();
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
     
-    // Set up a periodic refresh every 30 seconds
-    const refreshInterval = setInterval(() => {
-      refreshUserData();
+    // Initial fetch
+    fetchLeaveBalance(userId);
+    
+    // Set up polling interval (every 30 seconds)
+    const intervalId = setInterval(() => {
+      fetchLeaveBalance(userId);
     }, 30000);
     
     // Clean up on unmount
-    return () => {
-      clearInterval(refreshInterval);
-    };
-  }, [refreshUserData]);
+    return () => clearInterval(intervalId);
+  }, [fetchLeaveBalance]);
 
-  // Listen for tab changes to refresh data when returning to overview
+  // Additional effect to refresh leave balance when returning to the overview tab
   useEffect(() => {
     if (activeTab === 'overview') {
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        fetchLeaveBalance(userId);
+      }
+    }
+  }, [activeTab, fetchLeaveBalance]);
+
+  // Update the function to store submission date information
+  const checkForLeaveStatusChanges = useCallback(async (userId) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/leave/${userId}`);
+      
+      if (!response.data || !Array.isArray(response.data)) return;
+      
+      // Get stored notifications
+      const storedNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+      
+      // Get IDs of all notifications we've already sent
+      const notifiedRequestIds = storedNotifications
+        .filter(n => n.type === 'leave_status')
+        .map(n => n.leaveRequestId);
+      
+      // Find recently approved/rejected requests that haven't been notified yet
+      const newStatusChanges = response.data.filter(request => 
+        (request.status === 'approved' || request.status === 'rejected') && 
+        request.approvedAt && 
+        !notifiedRequestIds.includes(request._id)
+      );
+      
+      if (newStatusChanges.length > 0) {
+        console.log('Found new status changes:', newStatusChanges.length);
+        
+        // Create new notifications
+        const newNotifications = newStatusChanges.map(request => ({
+          id: `leave_${request._id}_${Date.now()}`,
+          type: 'leave_status',
+          leaveRequestId: request._id,
+          message: `Your ${request.leaveType} leave request has been ${request.status}${request.managerComment ? ' with comments' : ''}`,
+          leaveType: request.leaveType,
+          status: request.status,
+          date: new Date(request.approvedAt),
+          submittedDate: new Date(request.createdAt),
+          startDate: new Date(request.startDate),
+          endDate: new Date(request.endDate),
+          isRead: false
+        }));
+        
+        // Update notifications in state and localStorage
+        const updatedNotifications = [...newNotifications, ...storedNotifications];
+        setNotifications(updatedNotifications);
+        localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+        
+        // Refresh leave balance since a request was processed
+        fetchLeaveBalance(userId);
+      }
+    } catch (error) {
+      console.error("Error checking for leave status changes:", error);
+    }
+  }, [fetchLeaveBalance]);
+
+  // Add effect for periodically checking notifications
+  useEffect(() => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+    
+    // Check for notifications on initial load
+    checkForLeaveStatusChanges(userId);
+    
+    // Set up polling interval (every 30 seconds)
+    const intervalId = setInterval(() => {
+      checkForLeaveStatusChanges(userId);
+    }, 30000);
+    
+    // Clean up on unmount
+    return () => clearInterval(intervalId);
+  }, [checkForLeaveStatusChanges]);
+
+  // Update refreshUserData to also check for notifications
+  const refreshUserData = useCallback(() => {
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+      fetchLeaveBalance(userId);
+      checkForLeaveStatusChanges(userId);
+    }
+  }, [fetchLeaveBalance, checkForLeaveStatusChanges]);
+
+  // Add a function to mark notifications as read
+  const markNotificationRead = (notificationId) => {
+    const updatedNotifications = notifications.map(notification => 
+      notification.id === notificationId 
+        ? { ...notification, isRead: true } 
+        : notification
+    );
+    
+    setNotifications(updatedNotifications);
+    localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+  };
+
+  // Add a function to mark all notifications as read
+  const markAllNotificationsRead = () => {
+    const updatedNotifications = notifications.map(notification => ({
+      ...notification, 
+      isRead: true
+    }));
+    
+    setNotifications(updatedNotifications);
+    localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    // If switching to overview, refresh the data
+    if (tab === 'overview') {
       refreshUserData();
     }
-  }, [activeTab, refreshUserData]);
+  };
 
   const handleLogout = () => {
-    // Clear user data from localStorage
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userFirstName');
-    localStorage.removeItem('userLastName');
+    // Clear localStorage
+    localStorage.removeItem('token');
     localStorage.removeItem('role');
-    
-    // Redirect to login page - replace with your actual login path
+    localStorage.removeItem('userId');
+    // Navigate to login page
     window.location.href = '/login';
   };
+
+  // Use callback to close popup when clicking outside
+  const handleClickOutside = useCallback((event) => {
+    if (notificationPopupRef.current && !notificationPopupRef.current.contains(event.target)) {
+      setShowNotificationPopup(false);
+    }
+  }, []);
+
+  // Add event listener for clicking outside notification popup
+  useEffect(() => {
+    if (showNotificationPopup) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNotificationPopup, handleClickOutside]);
+
+  // Modified notification bell handler to toggle popup
+  const handleNotificationBellClick = (e) => {
+    e.stopPropagation(); // Prevent event bubbling
+    setShowNotificationPopup(!showNotificationPopup);
+    
+    // If popup is being opened and there are unread notifications, mark them as read
+    if (!showNotificationPopup && notifications.some(n => !n.isRead)) {
+      markAllNotificationsRead();
+    }
+  };
+
+  // Get formatted date for display
+  const formatNotificationDate = (dateString) => {
+    const options = { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return new Date(dateString).toLocaleString(undefined, options);
+  };
+
+  // Add a handler for notification clicks from the popup
+  const handleNotificationPopupClick = (notification) => {
+    // Mark the notification as read
+    markNotificationRead(notification.id);
+    
+    // Close the popup
+    setShowNotificationPopup(false);
+    
+    // If it's a leave request notification, navigate to the leave requests tab
+    if (notification.type === 'leave_status') {
+      handleTabChange('my-leaves');
+    }
+  };
+
+  // Update the name change handler to include visual feedback
+  const handleNameChange = useCallback((event) => {
+    if (event.detail && event.detail.fullName) {
+      setUserName(event.detail.fullName);
+      console.log('User name updated to:', event.detail.fullName);
+      
+      // Set flag to show animation
+      setIsNameUpdated(true);
+      
+      // Reset flag after animation completes
+      setTimeout(() => {
+        setIsNameUpdated(false);
+      }, 3000);
+    }
+  }, []);
+
+  // Add an event listener to update the user name when it changes
+  useEffect(() => {
+    // Add event listener for user name changes
+    window.addEventListener('userNameChanged', handleNameChange);
+    
+    // Cleanup function to remove event listener
+    return () => {
+      window.removeEventListener('userNameChanged', handleNameChange);
+    };
+  }, [handleNameChange]);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -143,7 +370,7 @@ const EmployeeDashboard = () => {
                 <FontAwesomeIcon icon={faUserCircle} size="3x" />
               </div>
               <div className="welcome-text">
-                <h2>Welcome back, {userName}!</h2>
+                <h2 className={isNameUpdated ? 'name-updated' : ''}>Welcome back, {userName}!</h2>
                 <p>Here's what's happening with your account today.</p>
               </div>
             </div>
@@ -184,7 +411,14 @@ const EmployeeDashboard = () => {
             </div>
             
             <div className="leave-balance-section">
-              <h3>Leave Balances</h3>
+              <h3>
+                Leave Balances
+                {lastUpdated && (
+                  <span className="last-updated">
+                    Updated: {lastUpdated.toLocaleTimeString()}
+                  </span>
+                )}
+              </h3>
               
               <div className="balance-cards">
                 <div className="balance-card annual">
@@ -218,21 +452,21 @@ const EmployeeDashboard = () => {
               <div className="action-buttons">
                 <button 
                   className="action-btn"
-                  onClick={() => setActiveTab('leave-request')}
+                  onClick={() => handleTabChange('leave-request')}
                 >
                   <FontAwesomeIcon icon={faCalendarAlt} />
                   <span>Request Leave</span>
                 </button>
                 <button 
                   className="action-btn"
-                  onClick={() => setActiveTab('personal-info')}
+                  onClick={() => handleTabChange('personal-info')}
                 >
                   <FontAwesomeIcon icon={faUserEdit} />
                   <span>Update Profile</span>
                 </button>
                 <button 
                   className="action-btn"
-                  onClick={() => setActiveTab('my-leaves')}
+                  onClick={() => handleTabChange('my-leaves')}
                 >
                   <FontAwesomeIcon icon={faCalendarAlt} />
                   <span>View Leave Requests</span>
@@ -242,20 +476,41 @@ const EmployeeDashboard = () => {
             
             {notifications.length > 0 && (
               <div className="notifications-section">
-                <h3>Recent Notifications</h3>
+                <h3>
+                  Recent Notifications
+                  {notifications.some(n => !n.isRead) && (
+                    <button 
+                      className="mark-all-read-btn"
+                      onClick={markAllNotificationsRead}
+                    >
+                      Mark all as read
+                    </button>
+                  )}
+                </h3>
                 <ul className="notification-list">
                   {notifications.map(notification => (
                     <li 
                       key={notification.id}
                       className={`notification-item ${!notification.isRead ? 'unread' : ''}`}
+                      onClick={() => handleNotificationPopupClick(notification)}
                     >
                       <div className="notification-icon">
                         <FontAwesomeIcon 
-                          icon={notification.type === 'leave' ? faCalendarAlt : faBell} 
+                          icon={
+                            notification.type === 'leave_status' 
+                              ? notification.status === 'approved' 
+                                ? faCheckCircle 
+                                : faTimesCircle
+                              : faBell
+                          } 
+                          className={notification.status === 'approved' ? 'approved' : notification.status === 'rejected' ? 'rejected' : ''}
                         />
                       </div>
                       <div className="notification-content">
                         <p>{notification.message}</p>
+                        <span className="notification-time">
+                          {new Date(notification.date).toLocaleString()}
+                        </span>
                       </div>
                     </li>
                   ))}
@@ -272,7 +527,7 @@ const EmployeeDashboard = () => {
       <div className="dashboard-sidebar">
         <div className="sidebar-header">
           <FontAwesomeIcon icon={faUserCircle} size="2x" />
-          <h2>{userName}</h2>
+          <h2 className={isNameUpdated ? 'name-updated' : ''}>{userName}</h2>
         </div>
         
         <nav className="sidebar-nav">
@@ -280,7 +535,7 @@ const EmployeeDashboard = () => {
             <li>
               <button 
                 className={activeTab === 'overview' ? 'active' : ''}
-                onClick={() => setActiveTab('overview')}
+                onClick={() => handleTabChange('overview')}
               >
                 <FontAwesomeIcon icon={faTachometerAlt} />
                 <span>Overview</span>
@@ -289,7 +544,7 @@ const EmployeeDashboard = () => {
             <li>
               <button 
                 className={activeTab === 'leave-request' ? 'active' : ''}
-                onClick={() => setActiveTab('leave-request')}
+                onClick={() => handleTabChange('leave-request')}
               >
                 <FontAwesomeIcon icon={faCalendarAlt} />
                 <span>Request Leave</span>
@@ -298,7 +553,7 @@ const EmployeeDashboard = () => {
             <li>
               <button 
                 className={activeTab === 'my-leaves' ? 'active' : ''}
-                onClick={() => setActiveTab('my-leaves')}
+                onClick={() => handleTabChange('my-leaves')}
               >
                 <FontAwesomeIcon icon={faCalendarAlt} />
                 <span>My Leave Requests</span>
@@ -307,7 +562,7 @@ const EmployeeDashboard = () => {
             <li>
               <button 
                 className={activeTab === 'personal-info' ? 'active' : ''}
-                onClick={() => setActiveTab('personal-info')}
+                onClick={() => handleTabChange('personal-info')}
               >
                 <FontAwesomeIcon icon={faUserEdit} />
                 <span>Personal Information</span>
@@ -333,12 +588,110 @@ const EmployeeDashboard = () => {
             {activeTab === 'personal-info' && 'Personal Information'}
           </h1>
           
-          <div className="notifications-indicator">
-            <FontAwesomeIcon icon={faBell} />
-            {notifications.filter(n => !n.isRead).length > 0 && (
-              <span className="notification-badge">
-                {notifications.filter(n => !n.isRead).length}
-              </span>
+          <div className="notifications-container">
+            <div 
+              className={`notifications-indicator ${notifications.filter(n => !n.isRead).length > 0 ? 'has-unread' : ''}`} 
+              onClick={handleNotificationBellClick}
+            >
+              <FontAwesomeIcon icon={faBell} />
+              {notifications.filter(n => !n.isRead).length > 0 && (
+                <span className="notification-badge">
+                  {notifications.filter(n => !n.isRead).length}
+                </span>
+              )}
+            </div>
+            
+            {showNotificationPopup && (
+              <div className="notification-popup" ref={notificationPopupRef}>
+                <div className="notification-popup-header">
+                  <h3>Notifications</h3>
+                  {notifications.length > 0 && (
+                    <button className="clear-all-btn" onClick={() => {
+                      localStorage.setItem('notifications', '[]');
+                      setNotifications([]);
+                      setShowNotificationPopup(false);
+                    }}>
+                      Clear All
+                    </button>
+                  )}
+                </div>
+                
+                <div className="notification-popup-content">
+                  {notifications.length === 0 ? (
+                    <div className="no-notifications">
+                      <FontAwesomeIcon icon={faBell} className="no-notifications-icon" />
+                      <p>No notifications</p>
+                    </div>
+                  ) : (
+                    <ul className="notification-popup-list">
+                      {notifications.map(notification => {
+                        // Find additional info based on notification type
+                        let additionalInfo = null;
+                        
+                        if (notification.type === 'leave_status') {
+                          // Format dates for display
+                          const submittedDate = notification.submittedDate ? formatNotificationDate(notification.submittedDate) : 'Unknown';
+                          const startDate = notification.startDate ? formatNotificationDate(notification.startDate).split(',')[0] : 'Unknown';
+                          const endDate = notification.endDate ? formatNotificationDate(notification.endDate).split(',')[0] : 'Unknown';
+                          
+                          additionalInfo = (
+                            <div className="notification-details">
+                              <div className="notification-detail-item">
+                                <span className="detail-label">Type:</span>
+                                <span className="detail-value">{notification.leaveType.charAt(0).toUpperCase() + notification.leaveType.slice(1)} Leave</span>
+                              </div>
+                              <div className="notification-detail-item">
+                                <span className="detail-label">Status:</span>
+                                <span className={`detail-value status-${notification.status}`}>{notification.status.charAt(0).toUpperCase() + notification.status.slice(1)}</span>
+                              </div>
+                              <div className="notification-detail-item">
+                                <span className="detail-label">Period:</span>
+                                <span className="detail-value">{startDate} to {endDate}</span>
+                              </div>
+                              <div className="notification-detail-item">
+                                <span className="detail-label">Submitted:</span>
+                                <span className="detail-value">{submittedDate}</span>
+                              </div>
+                              <div className="notification-detail-item">
+                                <span className="detail-label">Updated:</span>
+                                <span className="detail-value">{formatNotificationDate(notification.date)}</span>
+                              </div>
+                            </div>
+                          );
+                        }
+                        
+                        return (
+                          <li 
+                            key={notification.id}
+                            className={`notification-popup-item ${!notification.isRead ? 'unread' : ''}`}
+                            onClick={() => handleNotificationPopupClick(notification)}
+                          >
+                            <div className="notification-popup-icon">
+                              <FontAwesomeIcon 
+                                icon={
+                                  notification.type === 'leave_status' 
+                                    ? notification.status === 'approved' 
+                                      ? faCheckCircle 
+                                      : faTimesCircle
+                                    : faBell
+                                } 
+                                className={notification.status === 'approved' ? 'approved' : notification.status === 'rejected' ? 'rejected' : ''}
+                              />
+                            </div>
+                            <div className="notification-popup-content">
+                              <p className="notification-popup-message">{notification.message}</p>
+                              {additionalInfo}
+                              <span className="notification-popup-time">
+                                {formatNotificationDate(notification.date)}
+                              </span>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </div>

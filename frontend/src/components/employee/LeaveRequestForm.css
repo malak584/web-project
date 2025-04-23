@@ -178,4 +178,55 @@ label {
   border-radius: 4px;
   border-left: 3px solid #ef5350;
 }
+
+.balance-impact {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background-color: #f0f7ff;
+  border-radius: 6px;
+  color: #0d47a1;
+  font-size: 0.9rem;
+  animation: fadeIn 0.3s;
+}
+
+.balance-impact svg {
+  color: #1976d2;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.impact-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.impact-calculation {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.impact-arrow {
+  color: #78909c;
+  font-weight: bold;
+}
+
+.impact-result {
+  font-weight: 500;
+}
+
+.impact-change {
+  color: #d32f2f;
+  font-size: 0.85rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
   

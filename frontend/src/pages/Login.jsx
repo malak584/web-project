@@ -35,8 +35,23 @@ const Login = () => {
         return;
       }
   
-      // Optionally store token or user info if returned
-      localStorage.setItem("role", data.role); // you need to send role from backend
+      // Store user info in localStorage
+      localStorage.setItem("role", data.role);
+      localStorage.setItem("userId", data.userId);
+      localStorage.setItem("token", data.token);
+      
+      // Store user details if available
+      if (data.user) {
+        localStorage.setItem("userName", `${data.user.firstName} ${data.user.lastName}`);
+        localStorage.setItem("firstName", data.user.firstName);
+        localStorage.setItem("lastName", data.user.lastName);
+        localStorage.setItem("email", data.user.email);
+        
+        // Store other details if available
+        if (data.user.position) localStorage.setItem("position", data.user.position);
+        if (data.user.department) localStorage.setItem("department", data.user.department);
+      }
+      
       // navigate by role
       switch (data.role) {
         case "manager":
