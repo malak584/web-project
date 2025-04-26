@@ -17,29 +17,29 @@ const SignUp = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const newUser = {
-      name: form.name,
-      email: form.email,
-      password: form.password,
-      role: form.role,
-    };
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
 
-    const existingUsers = JSON.parse(localStorage.getItem("users")) || [];
-    const userExists = existingUsers.some(user => user.email === newUser.email);
-    
-    if (userExists) {
-      alert("A user with this email already exists.");
-      return;
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || 'Failed to create account');
+        return;
+      }
+
+      alert("Account created successfully!");
+      navigate("/login");
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong. Please try again later.");
     }
-
-    existingUsers.push(newUser);
-    localStorage.setItem("users", JSON.stringify(existingUsers));
-
-    alert("Account created successfully!");
-    navigate("/login");
   };
 
   return (
@@ -60,7 +60,7 @@ const SignUp = () => {
                 required
               />
             </div>
-            
+
             <div className="input-group">
               <FontAwesomeIcon icon={faEnvelope} className="input-icon" />
               <input
@@ -73,7 +73,7 @@ const SignUp = () => {
                 required
               />
             </div>
-            
+
             <div className="input-group">
               <FontAwesomeIcon icon={faLock} className="input-icon" />
               <input
@@ -86,7 +86,7 @@ const SignUp = () => {
                 required
               />
             </div>
-            
+
             <div className="input-group">
               <FontAwesomeIcon icon={faUserTag} className="input-icon" />
               <select
@@ -107,7 +107,7 @@ const SignUp = () => {
               Create Account
             </button>
           </form>
-          
+
           <p className="signup-footer">
             Already have an account? <Link to="/login" className="signup-link">Sign In</Link>
           </p>

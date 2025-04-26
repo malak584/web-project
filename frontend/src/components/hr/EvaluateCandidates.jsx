@@ -1,14 +1,14 @@
+// EvaluateCandidates.jsx
+import React from 'react';
+import CandidateList from './CandidateList'; // Make sure the path is correct
+
 const EvaluateCandidates = () => {
-    return (
-      <div className="p-4 bg-white rounded shadow">
-        <h2 className="text-xl font-semibold mb-2">Evaluate Candidates</h2>
-        <ul>
-          <li>👤 Jane Doe - Frontend Developer</li>
-          <li>👤 John Smith - Backend Engineer</li>
-        </ul>
-      </div>
-    );
-  };
-  
-  export default EvaluateCandidates;
-  
+  return (
+    <div className="evaluate-candidates-page" style={{ padding: '20px' }}>
+      <h1>Evaluate Candidates</h1>
+      <CandidateList />
+    </div>
+  );
+};
+
+export default EvaluateCandidates;

@@ -13,7 +13,9 @@ const bcrypt = require("bcryptjs");
 const authRoutes = require('./routes/authRoutes');
 // const jobRoutes = require('./routes/jobs'); // Commented out as file does not exist
 const newsletterRoutes = require('./routes/newsletter');
-
+const employeeRoutes = require('./routes/employeeRoutes');
+const candidateRoutes = require('./routes/candidateRoutes');
+const attendanceRoutes = require('./routes/attendanceRoutes');
 // Create an Express application
 const app = express();
 
@@ -61,16 +63,24 @@ app.use("/api/leave", LeaveRoutes);
 // Routes
 // app.use('/api/jobs', jobRoutes);
 app.use('/api/newsletter', newsletterRoutes);
-
+app.use('/api/employees', employeeRoutes);
+app.use('/api/candidates', candidateRoutes);
+app.use('/api/attendance', attendanceRoutes);  
 
 /* ===========================
     START THE SERVER
    =========================== */
 
 
-// Define the port to listen on (default is 5000 if not specified in .env)
-const PORT = process.env.PORT || 5000;
+// Define the port to listen on (default is 5001 if not specified in .env)
+const PORT = process.env.PORT || 5001;
 
 
 // Start the server and listen for incoming requests
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Something went wrong!' });
+});

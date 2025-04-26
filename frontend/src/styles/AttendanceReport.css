@@ -1,0 +1,32 @@
+.attendance-report-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.attendance-report-container h2 {
+  color: #333;
+  font-weight: 600;
+}
+
+.attendance-report-container .form-group {
+  min-width: 200px;
+}
+
+.attendance-report-container table {
+  margin-top: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.attendance-report-container th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.attendance-report-container td {
+  vertical-align: middle;
+}
+
+.attendance-report-container .alert {
+  margin-top: 1rem;
+} 

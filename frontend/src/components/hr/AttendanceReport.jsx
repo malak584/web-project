@@ -1,11 +1,28 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChartBar } from '@fortawesome/free-solid-svg-icons';
+
 const AttendanceReport = () => {
-    return (
-      <div className="p-4 bg-white rounded shadow">
-        <h2 className="text-xl font-semibold mb-2">Attendance Report</h2>
-        <p>📅 March Attendance: 96%</p>
+  const navigate = useNavigate();
+
+  return (
+    <div className="attendance-report-section">
+      <h2>Attendance Management</h2>
+      <div className="attendance-actions">
+        <Button
+          variant="primary"
+          onClick={() => navigate('/attendance-report')}
+          className="action-button"
+        >
+          <FontAwesomeIcon icon={faChartBar} className="me-2" />
+          View Monthly Attendance Report
+        </Button>
       </div>
-    );
-  };
-  
-  export default AttendanceReport;
+    </div>
+  );
+};
+
+export default AttendanceReport;
   

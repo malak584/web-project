@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons';
+import api from '../config/axios';
 import '../assets/css/Landing.css';
 
 const Login = () => {
@@ -10,40 +11,55 @@ const Login = () => {
     email: '',
     password: '',
   });
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setError(''); // Clear error when user types
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const user = users.find(
-      (u) => u.email === form.email && u.password === form.password
-    );
-
-    if (user) {
-      // Store user data and role
-      localStorage.setItem("currentUser", JSON.stringify(user));
-      localStorage.setItem("role", user.role);
+    setError('');
+  
+    try {
+      const response = await api.post("/auth/login", form);
+      const { data } = response;
+  
+      // Store user info in localStorage
+      localStorage.setItem("role", data.role);
+      localStorage.setItem("userId", data.userId);
+      localStorage.setItem("token", data.token);
       
-      // Navigate based on role
-      switch(user.role) {
-        case 'manager':
+      // Store user details if available
+      if (data.user) {
+        localStorage.setItem("userName", `${data.user.firstName} ${data.user.lastName}`);
+        localStorage.setItem("firstName", data.user.firstName);
+        localStorage.setItem("lastName", data.user.lastName);
+        localStorage.setItem("email", data.user.email);
+        
+        // Store other details if available
+        if (data.user.position) localStorage.setItem("position", data.user.position);
+        if (data.user.department) localStorage.setItem("department", data.user.department);
+      }
+      
+      // navigate by role
+      switch (data.role) {
+        case "manager":
           navigate("/manager");
           break;
-        case 'hr':
+        case "hr":
           navigate("/hr");
           break;
-        case 'employee':
+        case "employee":
           navigate("/employee");
           break;
         default:
           navigate("/");
       }
-    } else {
-      alert("Invalid email or password");
+    } catch (error) {
+      console.error("Login error:", error);
+      setError(error.response?.data?.message || "Something went wrong. Please try again.");
     }
   };
 
@@ -52,6 +68,7 @@ const Login = () => {
       <div className="login-container">
         <div className="login-card">
           <h2 className="login-title">Welcome Back</h2>
+          {error && <div className="error-message">{error}</div>}
           <form onSubmit={handleSubmit} className="login-form">
             <div className="input-group">
               <FontAwesomeIcon icon={faEnvelope} className="input-icon" />
