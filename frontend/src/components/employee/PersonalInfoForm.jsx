@@ -100,6 +100,41 @@ const PersonalInfoForm = () => {
     }
   };
 
+  const formatPhoneNumber = (phone) => {
+    // Remove any non-digit characters
+    const digitsOnly = phone.replace(/\D/g, '');
+    
+    // Take only the first 8 digits
+    const truncated = digitsOnly.slice(0, 8);
+    
+    return truncated;
+  };
+
+  const handlePhoneChange = (e) => {
+    const { name, value } = e.target;
+    
+    // Only allow digits
+    const formattedValue = formatPhoneNumber(value);
+    
+    setUserData({
+      ...userData,
+      [name]: formattedValue
+    });
+    
+    // Clear errors when user starts typing
+    if (errors[name]) {
+      setErrors({
+        ...errors,
+        [name]: ''
+      });
+    }
+    
+    // Clear success message when user makes changes
+    if (successMessage) {
+      setSuccessMessage('');
+    }
+  };
+
   const validateForm = () => {
     const newErrors = {};
     
@@ -117,12 +152,16 @@ const PersonalInfoForm = () => {
       newErrors.email = 'Enter a valid email address';
     }
     
-    if (userData.phone && !/^\d{10}$/.test(userData.phone.replace(/[^0-9]/g, ''))) {
-      newErrors.phone = 'Enter a valid phone number';
+    if (userData.phone) {
+      if (userData.phone.length !== 8 || !/^\d{8}$/.test(userData.phone)) {
+        newErrors.phone = 'Phone number must be exactly 8 digits';
+      }
     }
     
-    if (userData.emergencyPhone && !/^\d{10}$/.test(userData.emergencyPhone.replace(/[^0-9]/g, ''))) {
-      newErrors.emergencyPhone = 'Enter a valid emergency contact number';
+    if (userData.emergencyPhone) {
+      if (userData.emergencyPhone.length !== 8 || !/^\d{8}$/.test(userData.emergencyPhone)) {
+        newErrors.emergencyPhone = 'Emergency phone number must be exactly 8 digits';
+      }
     }
     
     setErrors(newErrors);
@@ -147,14 +186,48 @@ const PersonalInfoForm = () => {
         console.warn("User ID not found or invalid, using mock ID for demo");
       }
       
-      const response = await axios.put(`http://localhost:5000/api/users/${userId}`, userData);
+      // Create a copy of userData for submission
+      const dataToSubmit = { ...userData };
+      
+      // Format phone numbers for submission (with +216 prefix)
+      if (dataToSubmit.phone && dataToSubmit.phone.length === 8) {
+        // Store the raw 8 digits for the API, the prefix is handled on display
+        // The API might want to know the full international format
+        dataToSubmit.phoneFormatted = `+216${dataToSubmit.phone}`;
+      }
+      
+      if (dataToSubmit.emergencyPhone && dataToSubmit.emergencyPhone.length === 8) {
+        dataToSubmit.emergencyPhoneFormatted = `+216${dataToSubmit.emergencyPhone}`;
+      }
+      
+      const response = await axios.put(`http://localhost:5000/api/users/${userId}`, dataToSubmit);
       
       if (response.data) {
         setSuccessMessage('Personal information updated successfully!');
         
-        // Update localStorage with new user data for better UI consistency
-        if (userData.firstName) localStorage.setItem('userFirstName', userData.firstName);
-        if (userData.lastName) localStorage.setItem('userLastName', userData.lastName);
+        // Update localStorage with new user data for dashboard synchronization
+        if (userData.firstName) {
+          localStorage.setItem('firstName', userData.firstName); 
+        }
+        if (userData.lastName) {
+          localStorage.setItem('lastName', userData.lastName);
+        }
+        
+        // Update the full name in localStorage for the dashboard to use
+        if (userData.firstName && userData.lastName) {
+          const fullName = `${userData.firstName} ${userData.lastName}`;
+          localStorage.setItem('userName', fullName);
+          
+          // Trigger an event to notify the dashboard of the name change
+          const nameChangeEvent = new CustomEvent('userNameChanged', { 
+            detail: { 
+              fullName,
+              firstName: userData.firstName,
+              lastName: userData.lastName
+            } 
+          });
+          window.dispatchEvent(nameChangeEvent);
+        }
         
         setTimeout(() => {
           setSuccessMessage('');
@@ -251,16 +324,25 @@ const PersonalInfoForm = () => {
           <label htmlFor="phone">
             <FontAwesomeIcon icon={faPhone} /> Phone Number
           </label>
-          <input
-            type="tel"
-            id="phone"
-            name="phone"
-            className={`input ${errors.phone ? 'input-error' : ''}`}
-            value={userData.phone || ''}
-            onChange={handleChange}
-            disabled={saving}
-          />
+          <div className="phone-input-container">
+            <span className="phone-prefix">+216</span>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              className={`input phone-input ${errors.phone ? 'input-error' : ''}`}
+              value={userData.phone || ''}
+              onChange={handlePhoneChange}
+              disabled={saving}
+              placeholder="Enter 8 digits"
+              maxLength={8}
+              pattern="[0-9]{8}"
+            />
+          </div>
           {errors.phone && <span className="error-text">{errors.phone}</span>}
+          {!errors.phone && userData.phone && userData.phone.length < 8 && 
+            <span className="info-text">Phone number must be exactly 8 digits ({8 - userData.phone.length} more needed)</span>
+          }
         </div>
         
         <div className="form-group">
@@ -299,16 +381,25 @@ const PersonalInfoForm = () => {
           <label htmlFor="emergencyPhone">
             <FontAwesomeIcon icon={faPhone} /> Emergency Contact Phone
           </label>
-          <input
-            type="tel"
-            id="emergencyPhone"
-            name="emergencyPhone"
-            className={`input ${errors.emergencyPhone ? 'input-error' : ''}`}
-            value={userData.emergencyPhone || ''}
-            onChange={handleChange}
-            disabled={saving}
-          />
+          <div className="phone-input-container">
+            <span className="phone-prefix">+216</span>
+            <input
+              type="tel"
+              id="emergencyPhone"
+              name="emergencyPhone"
+              className={`input phone-input ${errors.emergencyPhone ? 'input-error' : ''}`}
+              value={userData.emergencyPhone || ''}
+              onChange={handlePhoneChange}
+              disabled={saving}
+              placeholder="Enter 8 digits"
+              maxLength={8}
+              pattern="[0-9]{8}"
+            />
+          </div>
           {errors.emergencyPhone && <span className="error-text">{errors.emergencyPhone}</span>}
+          {!errors.emergencyPhone && userData.emergencyPhone && userData.emergencyPhone.length < 8 && 
+            <span className="info-text">Phone number must be exactly 8 digits ({8 - userData.emergencyPhone.length} more needed)</span>
+          }
         </div>
         
         {errors.general && <div className="error-message">{errors.general}</div>}

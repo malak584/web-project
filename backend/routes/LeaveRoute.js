@@ -223,6 +223,17 @@ router.get("/pending/all", async (req, res) => {
   }
 });
 
+// Get all pending leave requests (for managers to approve/reject)
+router.get("/pending", async (req, res) => {
+  try {
+    const pendingRequests = await LeaveRequest.find({ status: 'pending' }).sort({ createdAt: -1 });
+    res.status(200).json(pendingRequests);
+  } catch (error) {
+    console.error("Error fetching pending leave requests:", error);
+    res.status(500).json({ message: "Error fetching pending leave requests", error: error.message });
+  }
+});
+
 // Approve or reject leave request
 router.put("/:requestId/status", async (req, res) => {
   try {
@@ -239,6 +250,9 @@ router.put("/:requestId/status", async (req, res) => {
       return res.status(404).json({ message: "Leave request not found" });
     }
     
+    // Get current timestamp for the approval/rejection time
+    const approvalTimestamp = new Date();
+    
     // Update the request status
     const updatedRequest = await LeaveRequest.findByIdAndUpdate(
       requestId,
@@ -246,7 +260,7 @@ router.put("/:requestId/status", async (req, res) => {
         status,
         managerComment,
         approvedBy: managerId,
-        approvedAt: new Date()
+        approvedAt: approvalTimestamp
       },
       { new: true }
     );
@@ -301,7 +315,8 @@ router.put("/:requestId/status", async (req, res) => {
     
     res.status(200).json({ 
       message: `Leave request ${status}`,
-      leaveRequest: updatedRequest
+      leaveRequest: updatedRequest,
+      timestamp: approvalTimestamp
     });
     
   } catch (error) {

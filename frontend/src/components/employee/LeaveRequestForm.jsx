@@ -295,6 +295,27 @@ const LeaveRequestForm = ({ onSubmitSuccess }) => {
               </span>
             </div>
           )}
+
+          {/* Show balance impact preview */}
+          {formData.leaveType && formData.leaveType !== 'unpaid' && requestDuration > 0 && (
+            <div className="balance-impact">
+              <FontAwesomeIcon icon={faCalendarAlt} />
+              <div className="impact-details">
+                <span>Balance impact if approved:</span>
+                <div className="impact-calculation">
+                  <span>Current: {leaveBalance[formData.leaveType] || 0} days</span>
+                  <span className="impact-arrow">→</span>
+                  <span className="impact-result">
+                    New: {Math.max(0, (leaveBalance[formData.leaveType] || 0) - requestDuration)} days
+                    {" "}
+                    <span className="impact-change">
+                      (-{requestDuration} {requestDuration === 1 ? 'day' : 'days'})
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="form-row">

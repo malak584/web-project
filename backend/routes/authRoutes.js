@@ -3,9 +3,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const router = express.Router();
+
 // Register User
-
-
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -28,9 +27,9 @@ router.post("/register", async (req, res) => {
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt); // ✅ now declared before use
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create new user with required fields
+    // Create new user
     user = new User({ firstName, lastName, email, password: hashedPassword, role });
     await user.save();
 
@@ -41,10 +40,48 @@ router.post("/register", async (req, res) => {
   }
 });
 
-
 // Login User
 router.post("/login", async (req, res) => {
   try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+    const userResponse = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      position: user.position,
+      department: user.department
+    };
+
+    res.cookie("token", token, { httpOnly: true });
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      role: user.role,
+      userId: user._id,
+      user: userResponse
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Logout User
+router.post("/logout", (req, res) => {
+  res.cookie("token", "", { httpOnly: true, expires: new Date(0) });
+  res.status(200).json({ message: "Logged out" });
+});
+
+module.exports = router;
+
     const { email, password } = req.body;
 
 

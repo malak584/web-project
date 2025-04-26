@@ -2,48 +2,40 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons';
-import api from '../config/axios';
 import '../assets/css/Landing.css';
 
 const Login = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    email: '',
-    password: '',
-  });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setError(''); // Clear error when user types
+    setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-  
+
     try {
-      const response = await api.post("/auth/login", form);
-      const { data } = response;
-  
-      // Store user info in localStorage
-      localStorage.setItem("role", data.role);
-      localStorage.setItem("userId", data.userId);
-      localStorage.setItem("token", data.token);
-      
-      // Store user details if available
-      if (data.user) {
-        localStorage.setItem("userName", `${data.user.firstName} ${data.user.lastName}`);
-        localStorage.setItem("firstName", data.user.firstName);
-        localStorage.setItem("lastName", data.user.lastName);
-        localStorage.setItem("email", data.user.email);
-        
-        // Store other details if available
-        if (data.user.position) localStorage.setItem("position", data.user.position);
-        if (data.user.department) localStorage.setItem("department", data.user.department);
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // important: sends cookies with the request
+        body: JSON.stringify(form),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Login failed");
+        return;
       }
-      
-      // navigate by role
+
+      // Navigate based on user role
       switch (data.role) {
         case "manager":
           navigate("/manager");
@@ -57,9 +49,10 @@ const Login = () => {
         default:
           navigate("/");
       }
+
     } catch (error) {
       console.error("Login error:", error);
-      setError(error.response?.data?.message || "Something went wrong. Please try again.");
+      setError("Something went wrong. Please try again.");
     }
   };
 
@@ -82,7 +75,7 @@ const Login = () => {
                 required
               />
             </div>
-            
+
             <div className="input-group">
               <FontAwesomeIcon icon={faLock} className="input-icon" />
               <input
@@ -100,7 +93,7 @@ const Login = () => {
               Sign In
             </button>
           </form>
-          
+
           <p className="login-footer">
             Don't have an account? <Link to="/signup" className="login-link">Sign Up</Link>
           </p>
