@@ -1,0 +1,206 @@
+.personal-info-card {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.personal-info-card .card-header {
+  background: linear-gradient(135deg, #5c6bc0 0%, #3949ab 100%);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.personal-info-card .header-icon {
+  font-size: 1.5rem;
+  margin-right: 1rem;
+}
+
+.personal-info-card h2 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: white;
+}
+
+.personal-info-form {
+  padding: 1.5rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #444;
+}
+
+label svg {
+  margin-right: 0.5rem;
+  color: #5c6bc0;
+}
+
+.required {
+  color: #e53935;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input:focus {
+  border-color: #5c6bc0;
+  box-shadow: 0 0 0 2px rgba(92, 107, 192, 0.1);
+  outline: none;
+}
+
+.input-error {
+  border-color: #e53935;
+  background-color: #fff8f8;
+}
+
+.error-text {
+  color: #e53935;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.section-title {
+  margin: 1.5rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+  color: #455a64;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.error-message {
+  color: #d32f2f;
+  background-color: #ffebee;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+  font-weight: 500;
+}
+
+.success-message {
+  color: #2e7d32;
+  background-color: #e8f5e9;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.save-button {
+  background-color: #3949ab;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.save-button:hover {
+  background-color: #303f9f;
+}
+
+.save-button:disabled {
+  background-color: #b0bec5;
+  cursor: not-allowed;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  color: #455a64;
+}
+
+/* Phone input styles */
+.phone-input-container {
+  display: flex;
+  align-items: stretch;
+  position: relative;
+}
+
+.phone-prefix {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #edf2ff;
+  color: #5c6bc0;
+  padding: 0 12px;
+  border: 1px solid #ddd;
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  user-select: none;
+}
+
+.phone-input {
+  border-radius: 0 4px 4px 0;
+  flex: 1;
+}
+
+.phone-input-container:focus-within .phone-prefix {
+  border-color: #5c6bc0;
+  background-color: #e3ecff;
+}
+
+.phone-input-container .input.input-error {
+  border-radius: 0 4px 4px 0;
+}
+
+.phone-input-container .input.input-error ~ .phone-prefix {
+  border-color: #e53935;
+  background-color: #fff8f8;
+}
+
+.info-text {
+  color: #5c6bc0;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: block;
+} 

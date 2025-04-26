@@ -1,0 +1,27 @@
+.attendance-report-section {
+  padding: 2rem;
+}
+
+.attendance-report-section h2 {
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.attendance-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 200px;
+}
+
+.action-button .nav-icon {
+  margin-right: 0.5rem;
+} 
