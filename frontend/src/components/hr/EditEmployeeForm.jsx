@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
-import './AddEmployeeForm.css';
+import axios from 'axios';
+import './EditEmployeeForm.css';
 
-const AddEmployeeForm = ({ onAdd, onCancel }) => {
+const EditEmployeeForm = ({ employee, onUpdate, onCancel }) => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -18,6 +19,22 @@ const AddEmployeeForm = ({ onAdd, onCancel }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    if (employee) {
+      setFormData({
+        firstName: employee.firstName,
+        lastName: employee.lastName,
+        email: employee.email,
+        position: employee.position,
+        department: employee.department,
+        startDate: employee.startDate,
+        salary: employee.salary,
+        phone: employee.phone || '',
+        address: employee.address || ''
+      });
+    }
+  }, [employee]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -31,71 +48,39 @@ const AddEmployeeForm = ({ onAdd, onCancel }) => {
     setLoading(true);
     setError('');
 
+    // Validate required fields
+    const requiredFields = ['firstName', 'lastName', 'email', 'position', 'department', 'startDate', 'salary'];
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    
+    if (missingFields.length > 0) {
+      console.log('Missing required fields:', missingFields);
+      setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      setLoading(false);
+      return;
+    }
+
     try {
-      // Validate required fields
-      const requiredFields = ['firstName', 'lastName', 'email', 'position', 'department', 'startDate', 'salary'];
-      const missingFields = requiredFields.filter(field => !formData[field]?.trim());
-      
-      if (missingFields.length > 0) {
-        setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
-        setLoading(false);
-        return;
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email.trim())) {
-        setError('Please enter a valid email address');
-        setLoading(false);
-        return;
-      }
-
-      // Validate salary
-      const salary = parseFloat(formData.salary);
-      if (isNaN(salary) || salary <= 0) {
-        setError('Salary must be a positive number');
-        setLoading(false);
-        return;
-      }
-
-      // Validate date format
-      if (!formData.startDate) {
-        setError('Please select a valid start date');
-        setLoading(false);
-        return;
-      }
-
-      // Prepare the employee data
-      const newEmployee = {
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        email: formData.email.trim().toLowerCase(),
-        position: formData.position.trim(),
-        department: formData.department,
-        startDate: formData.startDate,
-        salary: salary,
-        phone: formData.phone?.trim() || '',
-        address: formData.address?.trim() || ''
+      const updatedEmployee = {
+        ...employee,
+        ...formData,
+        salary: parseFloat(formData.salary) // Ensure salary is a number
       };
-
-      console.log('Submitting employee data:', newEmployee);
-
-      if (typeof onAdd === 'function') {
-        await onAdd(newEmployee);
-      } else {
-        throw new Error('onAdd function is not defined');
-      }
+      
+      console.log('Form data before update:', formData);
+      console.log('Prepared employee data:', updatedEmployee);
+      
+      await onUpdate(updatedEmployee);
     } catch (err) {
       console.error('Form submission error:', err);
-      setError(err.message || 'Failed to add employee. Please try again.');
+      setError(err.message || 'Failed to update employee. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="add-employee-form">
-      <h2>Add New Employee</h2>
+    <div className="edit-employee-form">
+      <h2>Edit Employee</h2>
 
       {error && (
         <div className="error-message">
@@ -220,13 +205,13 @@ const AddEmployeeForm = ({ onAdd, onCancel }) => {
           <button type="button" className="cancel-button" onClick={onCancel}>
             Cancel
           </button>
-          <button type="submit" className="add-button" disabled={loading}>
+          <button type="submit" className="update-button" disabled={loading}>
             {loading ? (
               <>
-                <FontAwesomeIcon icon={faSpinner} spin /> Adding...
+                <FontAwesomeIcon icon={faSpinner} spin /> Updating...
               </>
             ) : (
-              'Add Employee'
+              'Update Employee'
             )}
           </button>
         </div>
@@ -235,5 +220,4 @@ const AddEmployeeForm = ({ onAdd, onCancel }) => {
   );
 };
 
-export default AddEmployeeForm;
-  
+export default EditEmployeeForm; 

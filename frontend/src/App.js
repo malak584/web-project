@@ -8,6 +8,7 @@ import EmployeeDashboard from './pages/EmployeeDashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import SignUp from './pages/SignUp';
 import JobApplication from './pages/JobApplication';
+import AttendanceReport from './pages/AttendanceReport';
 import './styles/Global.css';
 
 
@@ -46,6 +47,16 @@ function App() {
           element={
             <ProtectedRoute roles={["employee"]}>
               <EmployeeDashboard />
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* Attendance Report Route */}
+        <Route 
+          path="/attendance-report" 
+          element={
+            <ProtectedRoute roles={["manager", "hr"]}>
+              <AttendanceReport />
             </ProtectedRoute>
           }
         />
