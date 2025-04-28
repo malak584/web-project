@@ -17,7 +17,7 @@ const CandidateList = () => {
   
   const fetchCandidates = async () => {
     try {
-      const response = await api.get('/candidates');
+      const response = await api.get('/');
       setCandidates(response.data);
       setError('');
     } catch (error) {

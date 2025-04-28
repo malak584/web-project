@@ -1,84 +1,72 @@
 const Employee = require('../models/Employee');
 
-// Get all employees
-exports.getAllEmployees = async (req, res) => {
+const getAllEmployees = async (req, res) => {
   try {
-    const employees = await Employee.find().sort({ createdAt: -1 });
-    res.status(200).json(employees);
+    const employees = await Employee.find(); // Fetch real employees from MongoDB
+    res.json(employees);  // Send employees as a JSON response
   } catch (error) {
-    console.error('Error fetching employees:', error);
-    res.status(500).json({ message: 'Error fetching employees' });
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
+
 // Get a single employee by ID
-exports.getEmployeeById = async (req, res) => {
+const getEmployeeById = async (req, res) => {
   try {
     const employee = await Employee.findById(req.params.id);
     if (!employee) {
-      return res.status(404).json({ message: 'Employee not found' });
+      return res.status(404).json({ message: "Employee not found" });
     }
-    res.status(200).json(employee);
+    res.json(employee);
   } catch (error) {
-    console.error('Error fetching employee:', error);
-    res.status(500).json({ message: 'Error fetching employee' });
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
 // Create a new employee
-exports.createEmployee = async (req, res) => {
+const createEmployee = async (req, res) => {
   try {
-    const employee = new Employee(req.body);
-    await employee.save();
-    res.status(201).json(employee);
+    const newEmployee = new Employee(req.body);
+    await newEmployee.save();
+    res.status(201).json(newEmployee);
   } catch (error) {
-    console.error('Error creating employee:', error);
-    if (error.code === 11000) {
-      res.status(409).json({ message: 'Email already exists' });
-    } else if (error.name === 'ValidationError') {
-      res.status(400).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: 'Error creating employee' });
-    }
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
 // Update an employee
-exports.updateEmployee = async (req, res) => {
+const updateEmployee = async (req, res) => {
   try {
-    const employee = await Employee.findByIdAndUpdate(
+    const updatedEmployee = await Employee.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true, runValidators: true }
+      { new: true }
     );
-    
-    if (!employee) {
-      return res.status(404).json({ message: 'Employee not found' });
-    }
-    
-    res.status(200).json(employee);
+    res.json(updatedEmployee);
   } catch (error) {
-    console.error('Error updating employee:', error);
-    if (error.code === 11000) {
-      res.status(409).json({ message: 'Email already exists' });
-    } else if (error.name === 'ValidationError') {
-      res.status(400).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: 'Error updating employee' });
-    }
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
 // Delete an employee
-exports.deleteEmployee = async (req, res) => {
+const deleteEmployee = async (req, res) => {
   try {
-    const employee = await Employee.findByIdAndDelete(req.params.id);
-    if (!employee) {
-      return res.status(404).json({ message: 'Employee not found' });
-    }
-    res.status(200).json({ message: 'Employee deleted successfully' });
+    await Employee.findByIdAndDelete(req.params.id);
+    res.json({ message: "Employee deleted successfully" });
   } catch (error) {
-    console.error('Error deleting employee:', error);
-    res.status(500).json({ message: 'Error deleting employee' });
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
   }
-}; 
+};
+
+module.exports = {
+  getAllEmployees,
+  getEmployeeById,
+  createEmployee,
+  updateEmployee,
+  deleteEmployee,
+};

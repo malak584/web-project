@@ -9,7 +9,6 @@ const UserSchema = new mongoose.Schema({
     },
     lastName: { 
         type: String, 
-        required: true,
         trim: true
     },
     email: { 
@@ -43,7 +42,8 @@ const UserSchema = new mongoose.Schema({
     },
     role: { 
         type: String, 
-        enum: ['HR', 'Interviewer', 'Admin'], 
+
+        enum: ['HR', 'Interviewer', 'Admin', "Employee"], 
         default: 'HR' 
     },
     profilePicture: {

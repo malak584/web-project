@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const Contract = require('../models/Contract');
 const router = express.Router();
 
 // Register User
@@ -99,6 +100,28 @@ router.post("/logout", (req, res) => {
     sameSite: "strict",
   });
   res.status(200).json({ message: "Logged out successfully." });
+});
+router.post('/contracts', async (req, res) => {
+  try {
+    const { employeeId, contractStartDate, contractEndDate, salary, position, status } = req.body;
+
+    // Create a new contract document
+    const newContract = new Contract({
+      employeeId,  // This is the employee's ID (foreign key to employee)
+      contractStartDate,
+      contractEndDate,
+      salary,
+      position,
+      status
+    });
+
+    // Save the contract to the database
+    await newContract.save();
+
+    res.status(201).json(newContract);  // Return the created contract
+  } catch (err) {
+    res.status(400).json({ message: 'Error creating contract', error: err.message });
+  }
 });
 
 module.exports = router;
