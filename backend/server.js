@@ -9,9 +9,13 @@ const mongoose = require("mongoose");
 
 // Create an Express application
 const app = express();
-app.use(cors());
+const corsOptions = {
+  origin: "http://localhost:3000", // Your React app URL
+  credentials: true, // Allow cookies to be sent with requests
+};
+app.use(cors(corsOptions));
 
-// Import routes
+// Import routes 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const leaveRoutes = require('./routes/LeaveRoute');
