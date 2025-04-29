@@ -56,6 +56,7 @@ const MyLeaveRequests = ({ onStatusChange }) => {
       setLoadingBalance(true);
       const response = await axios.get(`http://localhost:5000/api/leave/balance/${userId}`);
       if (response.data) {
+        
         setLeaveBalance(response.data);
       }
     } catch (error) {
@@ -69,9 +70,9 @@ const MyLeaveRequests = ({ onStatusChange }) => {
     try {
       setLoading(true);
       let employeeId = localStorage.getItem("userId");
-      
-      if (!employeeId || employeeId.length !== 24) {
-        // Using a valid format MongoDB ObjectId for demo purposes
+            if (!employeeId || employeeId.length !== 24) {
+        
+// Using a valid format MongoDB ObjectId for demo purposes
         employeeId = '507f1f77bcf86cd799439011';
         localStorage.setItem("userId", employeeId);
         console.warn("User ID not found or invalid, using mock ID for demo");
@@ -80,6 +81,7 @@ const MyLeaveRequests = ({ onStatusChange }) => {
       const response = await axios.get(`http://localhost:5000/api/leave/${employeeId}`);
       
       if (response.data) {
+        console.log(response.data)
         setLeaveRequests(response.data);
         setError(null);
         

@@ -1,12 +1,21 @@
 const Contract = require('../models/Contract');
+const Employee = require('../models/Employee');  // Import the Employee model
 
 // Create a new contract
 const createContract = async (req, res) => {
   try {
-    const { employeeId, contractStartDate, contractEndDate, salary, position, status } = req.body;
+    const { employeeEmail, contractStartDate, contractEndDate, salary, position, status } = req.body;
 
+    // Check if the employee exists by email
+    const employee = await Employee.findOne({ email: employeeEmail });  // Find by email
+    if (!employee) {
+      return res.status(400).json({ message: 'Employee not found' });
+    }
+
+    // Create the new contract if employee exists
     const newContract = new Contract({
-      employeeId,
+      employeeId: employee._id,  // Store the employee's ObjectId
+      employeeEmail,  // You can also store the employee's email if you want to include it in the contract
       contractStartDate,
       contractEndDate,
       salary,

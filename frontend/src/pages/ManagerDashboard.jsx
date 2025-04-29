@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserCircle, faCalendarCheck, faAngleDown, faAngleUp, faSpinner } from '@fortawesome/free-solid-svg-icons';
-
+import { 
+  faUserCircle, 
+  faCalendarCheck, 
+  faAngleDown, 
+  faAngleUp, 
+  faSpinner,
+  faSignOutAlt,
+  faTachometerAlt,
+  faUsers,
+  faFileContract,
+  faBuilding,
+  faClipboardList
+} from '@fortawesome/free-solid-svg-icons';
 
 import ContractManager from '../components/manager/ContractManager';
 import DepartmentAssignment from '../components/manager/DepartmentAssignment';
@@ -18,6 +29,7 @@ const ManagerDashboard = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [commentText, setCommentText] = useState('');
   const [processingId, setProcessingId] = useState(null);
+  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     fetchPendingRequests();
@@ -80,105 +92,238 @@ const ManagerDashboard = () => {
     return dayDiff;
   };
 
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <FontAwesomeIcon icon={faSpinner} spin size="3x" />
-        <p>Loading leave requests...</p>
-      </div>
-    );
-  }
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
 
-  return (
-    <div className="manager-dashboard">
-      <header className="dashboard-header">
-        <h1>
-          <FontAwesomeIcon icon={faCalendarCheck} /> Manager Dashboard
-        </h1>
-        <div className="user-info">
-          <FontAwesomeIcon icon={faUserCircle} />
-          <span>Manager</span>
-        </div>
-      </header>
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+  };
 
-      <main className="dashboard-content">
-        {error && (
-          <div className="error-message">
-            <p>{error}</p>
-            <button onClick={fetchPendingRequests}>Try Again</button>
-          </div>
-        )}
-
-        <div className="requests-container">
-          <h2>Pending Requests</h2>
-          {pendingRequests.length === 0 ? (
-            <div className="no-requests">
-              <p>No pending leave requests to approve.</p>
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'contracts':
+        return <ContractManager />;
+      case 'departments':
+        return <DepartmentManagement />;
+      case 'assignments':
+        return <DepartmentAssignment />;
+      case 'applications':
+        return <JobApplications />;
+      case 'leaves':
+        return <LeaveApproval />;
+      case 'overview':
+      default:
+        return (
+          <div className="overview-container">
+            <div className="dashboard-header">
+              <h2>Dashboard Overview</h2>
+              <div className="date-display">
+                {new Date().toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </div>
             </div>
-          ) : (
-            <ul className="request-list">
-              {pendingRequests.map(request => {
-                const isExpanded = expandedId === request._id;
-                const duration = calculateDuration(request.startDate, request.endDate);
 
-                return (
-                  <li key={request._id} className={`request-item ${isExpanded ? 'expanded' : ''}`}>
-                    <div className="request-header" onClick={() => toggleExpand(request._id)}>
-                      <div className="request-employee">
-                        <FontAwesomeIcon icon={faUserCircle} />
-                        {request.employeeId ? (
-                          <span>{request.employeeId.firstName} {request.employeeId.lastName}</span>
-                        ) : (
-                          <span>Unknown Employee</span>
-                        )}
-                      </div>
-                      <div className="request-type">
-                        {request.leaveType}
+            <div className="metrics-grid">
+              <div className="metric-card">
+                <div className="metric-icon">
+                  <FontAwesomeIcon icon={faCalendarCheck} />
+                </div>
+                <div className="metric-info">
+                  <h3>Pending Leave Requests</h3>
+                  <p className="metric-value">{pendingRequests.length}</p>
+                  <p className="metric-label">Requires your attention</p>
+                </div>
+              </div>
+
+              <div className="metric-card">
+                <div className="metric-icon">
+                  <FontAwesomeIcon icon={faFileContract} />
+                </div>
+                <div className="metric-info">
+                  <h3>Active Contracts</h3>
+                  <p className="metric-value">24</p>
+                  <p className="metric-label">Current employees</p>
+                </div>
+              </div>
+
+              <div className="metric-card">
+                <div className="metric-icon">
+                  <FontAwesomeIcon icon={faUsers} />
+                </div>
+                <div className="metric-info">
+                  <h3>Department Size</h3>
+                  <p className="metric-value">15</p>
+                  <p className="metric-label">Team members</p>
+                </div>
+              </div>
+
+              <div className="metric-card">
+                <div className="metric-icon">
+                  <FontAwesomeIcon icon={faClipboardList} />
+                </div>
+                <div className="metric-info">
+                  <h3>Open Positions</h3>
+                  <p className="metric-value">3</p>
+                  <p className="metric-label">Job openings</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="dashboard-sections">
+              <div className="section-card">
+                <h3>Recent Leave Requests</h3>
+                <div className="requests-list">
+                  {pendingRequests.slice(0, 5).map(request => (
+                    <div key={request._id} className="request-item">
+                      <div className="request-info">
+                        <span className="employee-name">{request.employeeName}</span>
+                        <span className="request-type">{request.leaveType}</span>
                       </div>
                       <div className="request-dates">
                         {formatDate(request.startDate)} - {formatDate(request.endDate)}
-                        <span className="request-duration">({duration} {duration === 1 ? 'day' : 'days'})</span>
                       </div>
-                      <button className="expand-btn">
-                        <FontAwesomeIcon icon={isExpanded ? faAngleUp : faAngleDown} />
+                      <button 
+                        className="action-btn"
+                        onClick={() => handleTabChange('leaves')}
+                      >
+                        Review
                       </button>
                     </div>
+                  ))}
+                </div>
+                {pendingRequests.length > 5 && (
+                  <button 
+                    className="view-all-btn"
+                    onClick={() => handleTabChange('leaves')}
+                  >
+                    View All Requests
+                  </button>
+                )}
+              </div>
 
-                    {isExpanded && (
-                      <div className="request-details">
-                        <div className="request-reason">
-                          <h4>Reason:</h4>
-                          <p>{request.reason}</p>
-                        </div>
-                        <div className="action-buttons">
-                          <button 
-                            onClick={() => handleRequestAction(request._id, 'approved')} 
-                            disabled={processingId === request._id}
-                          >
-                            Approve
-                          </button>
-                          <button 
-                            onClick={() => handleRequestAction(request._id, 'rejected')} 
-                            disabled={processingId === request._id}
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+              <div className="section-card">
+                <h3>Quick Actions</h3>
+                <div className="quick-actions">
+                  <button 
+                    className="action-btn primary"
+                    onClick={() => handleTabChange('contracts')}
+                  >
+                    <FontAwesomeIcon icon={faFileContract} />
+                    Manage Contracts
+                  </button>
+                  <button 
+                    className="action-btn primary"
+                    onClick={() => handleTabChange('departments')}
+                  >
+                    <FontAwesomeIcon icon={faBuilding} />
+                    Manage Departments
+                  </button>
+                  <button 
+                    className="action-btn primary"
+                    onClick={() => handleTabChange('assignments')}
+                  >
+                    <FontAwesomeIcon icon={faUsers} />
+                    Assign Employees
+                  </button>
+                  <button 
+                    className="action-btn primary"
+                    onClick={() => handleTabChange('applications')}
+                  >
+                    <FontAwesomeIcon icon={faClipboardList} />
+                    Review Applications
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="manager-dashboard">
+      <div className="dashboard-sidebar">
+        <div className="sidebar-header">
+          <FontAwesomeIcon icon={faUserCircle} size="2x" />
+          <h2>Manager</h2>
         </div>
-
-        <ContractManager />
-        <DepartmentAssignment />
-        <JobApplications />
-        <LeaveApproval />
-        <DepartmentManagement />
-      </main>
+        
+        <nav className="sidebar-nav">
+          <ul>
+            <li>
+              <button 
+                className={activeTab === 'overview' ? 'active' : ''}
+                onClick={() => handleTabChange('overview')}
+              >
+                <FontAwesomeIcon icon={faTachometerAlt} />
+                <span>Overview</span>
+              </button>
+            </li>
+            <li>
+              <button 
+                className={activeTab === 'leaves' ? 'active' : ''}
+                onClick={() => handleTabChange('leaves')}
+              >
+                <FontAwesomeIcon icon={faCalendarCheck} />
+                <span>Leave Approvals</span>
+              </button>
+            </li>
+            <li>
+              <button 
+                className={activeTab === 'contracts' ? 'active' : ''}
+                onClick={() => handleTabChange('contracts')}
+              >
+                <FontAwesomeIcon icon={faFileContract} />
+                <span>Contract Management</span>
+              </button>
+            </li>
+            <li>
+              <button 
+                className={activeTab === 'departments' ? 'active' : ''}
+                onClick={() => handleTabChange('departments')}
+              >
+                <FontAwesomeIcon icon={faBuilding} />
+                <span>Department Management</span>
+              </button>
+            </li>
+            <li>
+              <button 
+                className={activeTab === 'assignments' ? 'active' : ''}
+                onClick={() => handleTabChange('assignments')}
+              >
+                <FontAwesomeIcon icon={faUsers} />
+                <span>Department Assignment</span>
+              </button>
+            </li>
+            <li>
+              <button 
+                className={activeTab === 'applications' ? 'active' : ''}
+                onClick={() => handleTabChange('applications')}
+              >
+                <FontAwesomeIcon icon={faClipboardList} />
+                <span>Job Applications</span>
+              </button>
+            </li>
+          </ul>
+        </nav>
+        
+        <div className="sidebar-footer">
+          <button className="logout-btn" onClick={handleLogout}>
+            <FontAwesomeIcon icon={faSignOutAlt} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+      
+      <div className="dashboard-content">
+        {renderContent()}
+      </div>
     </div>
   );
 };

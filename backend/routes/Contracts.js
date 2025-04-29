@@ -3,15 +3,15 @@ const express = require('express');
 const router = express.Router();
 const Contract = require('../models/Contract');  // Ensure the path is correct
 const Employee = require('../models/Employee');  // Make sure you import the Employee model as well
-router.post('/', async (req, res) => {
+router.post('/add', async (req, res) => {
   try {
-    const { employeeId, contractStartDate, contractEndDate, salary, position, status } = req.body;
+    const { employeeEmail ,contractStartDate, contractEndDate, salary, position, status } = req.body;
 
     // Log the request body to verify data
     console.log('Received contract data:', req.body);
 
     const newContract = new Contract({
-      employeeId,
+      employeeEmail,
       contractStartDate,
       contractEndDate,
       salary,
@@ -30,7 +30,7 @@ router.post('/', async (req, res) => {
 // Fetch all contracts and populate the employee details
 router.get('/', async (req, res) => {
   try {
-    const contracts = await Contract.find().populate('employeeId');  // Make sure employeeId references Employee
+    const contracts = await Contract.find() // Make sure employeeId references Employee
     res.json(contracts);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching contracts', error: error.message });
