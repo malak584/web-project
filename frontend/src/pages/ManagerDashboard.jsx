@@ -9,6 +9,7 @@ import DepartmentAssignment from '../components/manager/DepartmentAssignment';
 import JobApplications from '../components/manager/JobApplications';
 import LeaveApproval from '../components/manager/LeaveApproval';
 import DepartmentManagement from '../components/manager/DepartmentManagement';
+import './ManagerDashboard.css'
 
 const ManagerDashboard = () => {
   const [pendingRequests, setPendingRequests] = useState([]);

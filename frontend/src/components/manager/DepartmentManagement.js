@@ -9,10 +9,18 @@ const DepartmentManagement = () => {
 
   // Fetch the departments on component mount
   useEffect(() => {
-    fetch("http://localhost:5000/api/departments")
-      .then((res) => res.json())
-      .then((data) => setDepartments(data))
-      .catch((err) => setMessage("Error fetching departments: " + err.message));
+    const fetchDepartments = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/departments");
+        if (!res.ok) throw new Error("Failed to fetch departments");
+        const data = await res.json();
+        setDepartments(data);
+      } catch (err) {
+        setMessage("Error fetching departments: " + err.message);
+      }
+    };
+
+    fetchDepartments();
   }, []);
 
   // Handle adding a new department
@@ -22,22 +30,31 @@ const DepartmentManagement = () => {
       return;
     }
 
-    const res = await fetch("http://localhost:5000/api/departments", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name: departmentName }),
-    });
+    try {
+      const res = await fetch("http://localhost:5000/api/departments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: departmentName }),
+      });
 
-    const data = await res.json();
+      if (!res.ok) throw new Error("Failed to add department");
 
-    if (data.success) {
-      setDepartments([...departments, { id: data.id, name: departmentName }]);
-      setDepartmentName("");
-      setMessage("Department added successfully!");
-    } else {
-      setMessage("Error adding department.");
+      const data = await res.json();
+
+      if (data.success) {
+        setDepartments((prevDepartments) => [
+          ...prevDepartments,
+          { id: data.id, name: departmentName },
+        ]);
+        setDepartmentName("");
+        setMessage("Department added successfully!");
+      } else {
+        setMessage("Error adding department.");
+      }
+    } catch (err) {
+      setMessage("Error adding department: " + err.message);
     }
   };
 

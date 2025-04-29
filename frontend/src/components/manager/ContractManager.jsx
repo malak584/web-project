@@ -40,10 +40,10 @@ const ContractManager = () => {
     try {
       // Send a POST request to create a new contract
       const response = await axios.post('http://localhost:5000/api/contracts', newContract);
-
+  
       // Add the new contract to the contracts list
       setContracts([...contracts, response.data]);
-
+  
       // Reset the form
       setNewContract({
         employeeId: '',
@@ -51,9 +51,9 @@ const ContractManager = () => {
         contractEndDate: '',
         salary: '',
         position: '',
-        status: ''
+        status: '' // Make sure status is set before submission
       });
-
+  
       alert('Contract created successfully!');
     } catch (err) {
       console.error('Error creating contract', err);

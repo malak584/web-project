@@ -2,12 +2,11 @@
 require("dotenv").config();
 
 const express = require("express");
-const cors = require("cors");
+const cors = require("cors");  //allow your React app to communicate with the backend server.
 const cookieParser = require("cookie-parser");
-const mongoose = require("mongoose");
+const mongoose = require("mongoose"); //library for interacting with a MongoDB database
 
-
-// Create an Express application
+// Create an Express application to handle requests and responses.
 const app = express();
 const corsOptions = {
   origin: "http://localhost:3000", // Your React app URL
@@ -19,7 +18,7 @@ app.use(cors(corsOptions));
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const leaveRoutes = require('./routes/LeaveRoute');
-const contractRoutes = require('./routes/Contracts');
+const contractRoutes = require('./routes/Contracts');  // Only this route should be used
 const newsletterRoutes = require('./routes/newsletter');
 const employeeRoutes = require('./routes/employeeRoutes');
 const candidateRoutes = require('./routes/candidateRoutes');
@@ -32,7 +31,6 @@ const departmentRouter = require("./routes/DepartmentRoutes");
 app.use(express.json());
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(cookieParser());
-
 
 /* ===========================
     DATABASE
@@ -47,28 +45,12 @@ mongoose.connect(process.env.MONGO_URI)
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/leave", leaveRoutes);
-app.use("/api/contracts", contractRoutes);
+app.use("/api/contracts", contractRoutes);  // Use the correct route variable here
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/candidates", candidateRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api", departmentRouter); 
-
-
-
-
-app.post("/api/assign-department", (req, res) => {
-  const { employeeId, departmentId } = req.body;
-
-  if (!employeeId || !departmentId) {
-    return res.status(400).json({ message: "Missing employee or department ID" });
-  }
-
-  assignments.push({ employeeId, departmentId });
-  console.log("Assignments:", assignments);
-
-  res.json({ message: "Department assigned successfully!" });
-});
 
 /* ===========================
     ERROR HANDLING

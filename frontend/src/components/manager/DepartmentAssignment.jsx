@@ -17,13 +17,14 @@ const DepartmentAssignment = () => {
     }
 
     try {
-      const res = await fetch("/api/assign", {
+      const res = await fetch("http://localhost:5000/api/add-employee", { 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          managerId: selectedEmployee,  // Assuming selectedEmployee is the manager's ID
+          employeeId: selectedEmployee, 
           departmentId: selectedDepartment,
         }),
+        
       });
 
       const data = await res.json();

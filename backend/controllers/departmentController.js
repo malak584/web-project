@@ -1,30 +1,35 @@
-// controllers/departmentController.js
-const mongoose = require('mongoose');
-const Department = require('../models/departmentModel');
-const Manager = require('../models/managerModel');
+const Department = require('../models/Department');
+const Employee = require('../models/Employee');
 
-// Assign a manager to a department
-const assignManagerToDepartment = async (req, res) => {
-  const { departmentId, managerId } = req.body;
-
+const addEmployeeToDepartment = async (req, res) => {
   try {
-    // Find department and manager by their IDs
-    const department = await Department.findById(departmentId);
-    const manager = await Manager.findById(managerId);
+    const { departmentId, employeeId } = req.body;
 
-    if (!department || !manager) {
-      return res.status(404).send('Department or Manager not found');
+    if (!departmentId || !employeeId) {
+      return res.status(400).json({ message: "Department ID and Employee ID are required." });
     }
 
-    // Assign the manager to the department
-    department.manager = manager._id;
-    await department.save();  // Save the department with the assigned manager
+    const department = await Department.findById(departmentId);
+    const employee = await Employee.findById(employeeId);
 
-    res.status(200).send('Manager assigned successfully');
+    if (!department || !employee) {
+      return res.status(404).json({ message: "Department or Employee not found." });
+    }
+
+    // Check if already assigned
+    if (department.employees.includes(employeeId)) {
+      return res.status(400).json({ message: "Employee already assigned to this department." });
+    }
+
+    department.employees.push(employeeId);
+    await department.save();
+
+    res.status(200).json({ message: "Employee successfully added to department." });
   } catch (error) {
     console.error(error);
-    res.status(500).send('Server error');
+    res.status(500).json({ message: "Server error." });
   }
 };
 
-module.exports = { assignManagerToDepartment };
+// VERY IMPORTANT: Export using the same function name
+module.exports = { addEmployeeToDepartment };

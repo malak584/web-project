@@ -1,16 +1,16 @@
-// models/departmentModel.js
 const mongoose = require('mongoose');
 
+// Assuming you have an Employee model
 const departmentSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
   },
-  manager: {
+  employees: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Manager', // This refers to the Manager model
+    ref: 'Employee', // This now refers to the Employee model
     required: true,
-  },
+  }],
 });
 
 const Department = mongoose.model('Department', departmentSchema);
