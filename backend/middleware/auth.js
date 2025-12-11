@@ -3,17 +3,17 @@ const User = require('../models/User');
 
 const auth = async (req, res, next) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    const token = req.cookies.token || req.header('Authorization')?.replace('Bearer ', '');
     
     if (!token) {
       return res.status(401).json({ message: 'Authentication required' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-const user = await User.findOne({ _id: decoded.id, isActive: true });
+    const user = await User.findOne({ _id: decoded.id, isActive: true });
 
     if (!user) {
-      return res.status(401).json({ message: 'User not found or inactive' });
+      throw new Error();
     }
 
     req.user = user;
@@ -24,15 +24,20 @@ const user = await User.findOne({ _id: decoded.id, isActive: true });
   }
 };
 
-const isHR = async (req, res, next) => {
-  try {
-    if (req.user.role !== 'hr' && req.user.role !== 'Admin') {
-      return res.status(403).json({ message: 'Access denied. HR personnel only.' });
-    }
+const isHR = (req, res, next) => {
+  if (['HR', 'Admin'].includes(req.user.role)) {
     next();
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+  } else {
+    res.status(403).json({ message: 'Access denied. HR only.' });
   }
 };
 
-module.exports = { auth, isHR }; 
+const isManager = (req, res, next) => {
+  if (['Manager', 'HR', 'Admin'].includes(req.user.role)) {
+    next();
+  } else {
+    res.status(403).json({ message: 'Access denied. Managers only.' });
+  }
+};
+
+module.exports = { auth, isHR, isManager };

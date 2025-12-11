@@ -2,113 +2,47 @@ const mongoose = require("mongoose");
 const bcrypt = require('bcryptjs');
 
 const UserSchema = new mongoose.Schema({
-    firstName: { 
-        type: String, 
-        required: true,
-        trim: true
-    },
-    lastName: { 
-        type: String, 
-        trim: true
-    },
+    // Auth Info
+    firstName: { type: String, required: true, trim: true },
+    lastName: { type: String, required: true, trim: true },
     email: { 
-        type: String, 
-        required: true, 
-        unique: true,
-        trim: true,
-        lowercase: true,
-        match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+        type: String, required: true, unique: true, lowercase: true, trim: true 
     },
-    password: { 
-        type: String, 
-        required: true,
-        minlength: [6, 'Password must be at least 6 characters long']
-    },
-    phone: { 
-        type: String,
-        trim: true
-    },
-    address: { 
-        type: String,
-        trim: true
-    },
-    emergencyContact: { 
-        type: String,
-        trim: true
-    },
-    emergencyPhone: { 
-        type: String,
-        trim: true
-    },
+    password: { type: String, required: true },
     role: { 
         type: String, 
+        enum: ['HR', 'Admin', 'Employee', 'Manager'], 
+        default: 'Employee' 
+    },
+    isActive: { type: Boolean, default: true },
 
-        enum: ['HR', 'Interviewer', 'Admin', "Employee"], 
-        default: 'HR' 
-    },
-    profilePicture: {
-        type: String,
-        default: '/assets/default-avatar.png'
-    },
-    department: {
-        type: String,
-        required: [true, 'Department is required'],
-        trim: true
-    },
-    position: {
-        type: String,
-        required: [true, 'Position is required'],
-        trim: true
-    },
-    dateHired: {
-        type: Date
-    },
-    isActive: {
-        type: Boolean,
-        default: true
-    },
+    // Professional Info
+    department: { type: String, default: 'Unassigned' }, // Can be linked to Department model if needed
+    position: { type: String, default: 'Unassigned' },
+    salary: { type: Number, default: 0 },
+    startDate: { type: Date, default: Date.now },
+    phone: String,
+    address: String,
+
+    // Leave Balance
     leaveBalance: {
-        annual: {
-            type: Number,
-            default: 15
-        },
-        sick: {
-            type: Number,
-            default: 10
-        },
-        personal: {
-            type: Number,
-            default: 5
-        },
-        bereavement: {
-            type: Number,
-            default: 3
-        },
-        unpaid: {
-            type: Number,
-            default: 0 // Unlimited, but we'll track it
-        }
-    },
-    lastLogin: {
-        type: Date
+        annual: { type: Number, default: 15 },
+        sick: { type: Number, default: 10 },
+        personal: { type: Number, default: 5 },
+        unpaid: { type: Number, default: 0 }
     }
 }, { timestamps: true });
 
 // Hash password before saving
-UserSchema.pre('save', async function(next) {
+UserSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
-    
-    try {
-        const salt = await bcrypt.genSalt(10);
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (error) {
-        next(error);
-    }
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
 });
 
-// Method to compare passwords
-UserSchema.methods.comparePassword = async function(candidatePassword) {
+// Compare password method
+UserSchema.methods.comparePassword = async function (candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 };
 

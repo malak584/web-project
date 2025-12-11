@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from '../../config/axios';
 
 const api = axios.create({
   baseURL: 'http://localhost:5000/api', // updated port to 5001

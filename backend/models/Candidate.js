@@ -131,7 +131,6 @@ const candidateSchema = new mongoose.Schema({
 });
 
 // Index for faster queries
-candidateSchema.index({ email: 1 });
 candidateSchema.index({ status: 1 });
 candidateSchema.index({ 'interviews.date': 1 });
 

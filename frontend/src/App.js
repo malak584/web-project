@@ -20,13 +20,13 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/jobs" element={<JobListings />} />
         <Route path="/signup" element={<SignUp />} />
-        <Route path="/apply/:jobId" element={<JobApplication />} />
+        <Route path="/apply/:jobId"s element={<JobApplication />} />
 
         {/* Dashboards (no longer protected) */}
         <Route path="/manager" element={<ManagerDashboard />} />
         <Route path="/hr" element={<HRDashboard />} />
         <Route path="/employee" element={<EmployeeDashboard />} />
-        
+
         {/* Attendance Report */}
         <Route path="/attendance-report" element={<AttendanceReport />} />
 

@@ -39,13 +39,13 @@ router.post('/subscribe', async (req, res) => {
     const subscription = new Subscription({ email });
     await subscription.save();
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: 'Subscription successful',
       email: email
     });
   } catch (error) {
     console.error('Subscription error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to process subscription',
       error: error.message
     });

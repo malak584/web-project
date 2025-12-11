@@ -1,70 +1,44 @@
-// Load environment variables
 require("dotenv").config();
-
 const express = require("express");
-const cors = require("cors");  //allow your React app to communicate with the backend server.
+const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const mongoose = require("mongoose"); //library for interacting with a MongoDB database
+const mongoose = require("mongoose");
 
-// Create an Express application to handle requests and responses.
 const app = express();
-const corsOptions = {
-  origin: "http://localhost:3000", // Your React app URL
-  credentials: true, // Allow cookies to be sent with requests
-};
-app.use(cors(corsOptions));
 
-// Import routes 
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-const leaveRoutes = require('./routes/LeaveRoute');
-const contractRoutes = require('./routes/Contracts');  // Only this route should be used
-const newsletterRoutes = require('./routes/newsletter');
-const employeeRoutes = require('./routes/employeeRoutes');
-const candidateRoutes = require('./routes/candidateRoutes');
-const attendanceRoutes = require('./routes/attendanceRoutes');
-const departmentRouter = require("./routes/DepartmentRoutes");
-
-/* ===========================
-    MIDDLEWARE
-=========================== */
+// --- 1. Middleware ---
 app.use(express.json());
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(cookieParser());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  credentials: true
+}));
 
-/* ===========================
-    DATABASE
-=========================== */
+// --- 2. Database Connection ---
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => console.error("❌ MongoDB Error:", err));
+
 
 /* ===========================
     ROUTES
 =========================== */
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/leave", leaveRoutes);
-app.use("/api/contracts", contractRoutes);  // Use the correct route variable here
-app.use("/api/newsletter", newsletterRoutes);
-app.use("/api/employees", employeeRoutes);
-app.use("/api/candidates", candidateRoutes);
-app.use("/api/attendance", attendanceRoutes);
-app.use("/api", departmentRouter); 
+// Notice we are requiring the new short names we just created
+app.use("/api/auth", require('./routes/auth'));           // BEFORE: require('./routes/authRoutes')
+app.use("/api/users", require('./routes/users'));         // BEFORE: require('./routes/userRoutes')
+app.use("/api/leave", require('./routes/leave'));         // BEFORE: require('./routes/LeaveRoute')
+app.use("/api/contracts", require('./routes/contracts')); // BEFORE: require('./routes/Contracts')
+app.use("/api/newsletter", require('./routes/newsletter'));
+app.use("/api/candidates", require('./routes/candidate')); // BEFORE: require('./routes/candidateRoutes')
+app.use("/api/attendance", require('./routes/attendance')); // BEFORE: require('./routes/attendanceRoutes')
+app.use("/api/departments", require("./routes/departments"));
+app.use("/api/reports", require("./routes/reports"));     // BEFORE: require('./routes/reportRoutes')
 
-/* ===========================
-    ERROR HANDLING
-=========================== */
+// --- 4. Global Error Handler ---
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!', error: err.message });
+  res.status(500).json({ message: "Server Error", error: err.message });
 });
 
-/* ===========================
-    START SERVER
-=========================== */
 const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

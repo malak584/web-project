@@ -37,13 +37,13 @@ const Login = () => {
 
       // Navigate based on user role
       switch (data.role) {
-        case "manager":
+        case "Manager":
           navigate("/manager");
           break;
-        case "hr":
+        case "HR":
           navigate("/hr");
           break;
-        case "employee":
+        case "Employee":
           navigate("/employee");
           break;
         default:
@@ -68,7 +68,7 @@ const Login = () => {
               <input
                 type="email"
                 name="email"
-                placeholder="Email Address"  
+                placeholder="Email Address"
                 value={form.email}
                 onChange={handleChange}
                 className="input-field"
